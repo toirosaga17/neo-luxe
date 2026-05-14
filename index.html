@@ -389,10 +389,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   </div>
 </div>
 
+<!-- タイムツリー -->
+  <div class="card" id="timetreeCard" style="display:none;">
+    <div class="card-label">タイムツリー用テキスト</div>
+    <div class="output-box"><div class="output-tag">▼ コピーしてタイムツリーに貼り付け</div><div class="output-text" id="timetreeText"></div></div>
+    <button class="btn-outline" id="timetreeCopyBtn" onclick="copyText('timetreeText','timetreeCopyBtn')">📋 コピー</button>
+  </div>
+
 </div><!-- /scroll-area -->
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyKwmlax7SruOpDHN328jNOkUem-ILD0yB1JMUmr6-wVmidDKDKIiJAp4HvZC68DW9Cug/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwhoGzpOecoiMuQ0Zu-NgJW1APj2Z0opp1SQF0uuiF9TzlGyFsoYT6FPuQBq_DKPNaOBg/exec';
 const OB = {'スタ増量':1000,'レオ増量':1500,'アル増量':2000,'贅沢':2000,'集中':1000,'衣装':2000,'ヘッドスパ':1000};
 
 let THERAPISTS = {};
@@ -409,6 +416,7 @@ async function init() {
   const today = local.toISOString().slice(0,10);
   document.getElementById('closeDate').value = today;
   document.getElementById('payDate').value = today;
+  document.getElementById('cancelDate').value = today;
 
   await loadTherapists();
   onCourseChange();
@@ -421,7 +429,7 @@ async function loadTherapists() {
     if(res.success) {
       THERAPISTS = res.therapists;
       const names = Object.keys(THERAPISTS);
-      ['therapist','closeTherapist','payTherapist'].forEach(id => {
+      ['therapist','closeTherapist','payTherapist','cancelTherapist'].forEach(id => {
         const sel = document.getElementById(id);
         const cur = sel.value;
         sel.innerHTML = '<option value="">選択</option>';
@@ -599,12 +607,22 @@ function generate() {
   const sms = `メンズエステ店の中からNEO LUXEをお選びいただき、\n誠に有難うございます。\n当店は【厳選されたセラピスト】のみが在籍している店舗でございます。\n自信を持ってご案内させていただきます。\nお客様にとって癒しのお時間になる事を心より願っております🌱\n【〒790-0878】\n【勝山アリストシード】\n松山市勝山町1丁目1-15\n時間:${fullStr}\nルーム:${room}\n上記のマンションに到着されましたらお手数をおかけしますが、\n以下のURLをタップしていただき、\n【電話】を押しご連絡をよろしくお願いいたします。\nhttps://estama.jp/shop/29585/`;
   const line = `▫日付:${dateStr}\n▫担当セラピスト: ${therapist}${shimei==='フリー'?'':shimei}\n▫時間:${timeStr}\n▫コース:${course}${duration}\n▫オプション:${optNames}\n▫お名前:${customer}\n▫割引内容:${discount}\n▫お客様支払い合計:${total.toLocaleString()}`;
 
+  // タイムツリー用テキスト生成
+  const timetree = `【${therapist}${shimei==='フリー'?'':shimei}】
+${course}${duration}分
+${fullStr}
+部屋：${room}
+お客様：${customer}
+料金：¥${total.toLocaleString()}${optNames?'\nオプション：'+optNames:''}`;
+
+  document.getElementById('timetreeText').textContent = timetree;
+  document.getElementById('timetreeCard').style.display = 'block';
   document.getElementById('smsText').textContent = sms;
   document.getElementById('lineText').textContent = line;
 
   lastData = {action:'record',date:dateStr,time:timeStr,therapist,course,coursePrice:cp,shimeiType:shimei,shimeiPrice:sp,options:selectedOpts,discount,discountAmount:da,total,customer,phone,duration};
 
-  ['rewardCard','recordCard','smsCard','lineCard'].forEach(id=>document.getElementById(id).style.display='block');
+  ['rewardCard','recordCard','timetreeCard','smsCard','lineCard'].forEach(id=>document.getElementById(id).style.display='block');
   document.getElementById('rewardCard').scrollIntoView({behavior:'smooth'});
 }
 
@@ -654,6 +672,30 @@ async function updatePayment() {
     if(res.success)setStatus('payStatus',`支払済み！ 合計：¥${res.totalPay.toLocaleString()}`,'ok');
     else throw new Error(res.error);
   }catch(e){setStatus('payStatus','エラー: '+e.message,'err');}
+}
+
+async function cancelBooking() {
+  const therapist = document.getElementById('cancelTherapist').value;
+  const date = document.getElementById('cancelDate').value;
+  const timeVal = document.getElementById('cancelTime').value;
+  if(!therapist||!date||!timeVal){alert('セラピスト・日付・時間を入力してください');return;}
+
+  // 時間をM/D形式に変換
+  const d = new Date(date);
+  const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+  const [h,m] = timeVal.split(':');
+  const timeStr = `${parseInt(h)}時${m}分`;
+
+  if(!confirm(`${dateStr} ${timeStr} ${therapist}の予約をキャンセルしますか？`)){return;}
+
+  setStatus('cancelStatus','処理中...','');
+  try{
+    const res = await post({action:'cancel', date:dateStr, therapist, time:timeStr});
+    if(res.success){
+      setStatus('cancelStatus','キャンセル完了！スプレッドシートから削除しました','ok');
+      document.getElementById('cancelTime').value='';
+    }else throw new Error(res.error);
+  }catch(e){setStatus('cancelStatus','エラー: '+e.message,'err');}
 }
 
 async function loadUnpaid() {
