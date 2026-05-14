@@ -67,7 +67,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 .fg.full{grid-column:1/-1;}
 label{font-size:.65rem;color:var(--text3);letter-spacing:.05em;}
 input,select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:.9rem;padding:10px 12px;outline:none;transition:border-color .2s;width:100%;touch-action:manipulation;max-width:100%;}
-input:focus,select:focus{border-color:var(--gold);}input[type=datetime-local]{font-size:.75rem;padding:10px 8px;}
+input:focus,select:focus{border-color:var(--gold);}input[type=datetime-local]{font-size:.75rem;padding:10px 8px;min-width:0;}
 select option{background:var(--bg3);}
 input[type=number]{-moz-appearance:textfield;}
 input[type=number]::-webkit-outer-spin-button,
@@ -227,18 +227,16 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       </div>
       <div class="fg">
         <label>コース</label>
-        <select id="course" onchange="updateReward()">
+        <select id="course" onchange="onCourseChange()">
           <option value="スタンダード">スタンダード</option>
           <option value="レオナール">レオナール</option>
           <option value="アルミラージ">アルミラージ</option>
         </select>
       </div>
       <div class="fg">
-        <label>時間（分）</label>
-        <select id="duration">
-          <option value="60">60分</option><option value="75">75分</option>
-          <option value="90">90分</option><option value="100">100分</option>
-          <option value="120">120分</option>
+        <label>コース時間</label>
+        <select id="duration" onchange="autoPrice()">
+          <option value="60">60分</option>
         </select>
       </div>
       <div class="fg">
@@ -716,6 +714,38 @@ function setStatus(id,msg,type) {
 async function post(data) {
   const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'text/plain'}});
   return res.json();
+}
+
+// コース料金マスタ
+const COURSE_PRICE = {
+  'スタンダード': {'60':10000,'90':15000,'120':20000,'150':25000,'180':30000},
+  'レオナール':   {'100':20000,'130':25000,'160':30000,'190':35000},
+  'アルミラージ': {'70':18000},
+};
+const COURSE_DURATIONS = {
+  'スタンダード': ['60','90','120','150','180'],
+  'レオナール':   ['100','130','160','190'],
+  'アルミラージ': ['70'],
+};
+
+function onCourseChange() {
+  const course = document.getElementById('course').value;
+  const durSel = document.getElementById('duration');
+  const durations = COURSE_DURATIONS[course] || ['60'];
+  durSel.innerHTML = durations.map(d=>`<option value="${d}">${d}分</option>`).join('');
+  autoPrice();
+  updateReward();
+}
+
+function autoPrice() {
+  const course = document.getElementById('course').value;
+  const duration = document.getElementById('duration').value;
+  const price = (COURSE_PRICE[course]||{})[duration];
+  if(price) {
+    document.getElementById('coursePrice').value = price;
+    calcTotal();
+    updateReward();
+  }
 }
 
 // 起動
