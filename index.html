@@ -427,8 +427,6 @@ async function init() {
   const today = local.toISOString().slice(0,10);
   document.getElementById('closeDate').value = today;
   document.getElementById('payDate').value = today;
-  document.getElementById('cancelDate').value = today;
-
   await loadTherapists();
   onCourseChange();
   loadDashboard();
@@ -441,16 +439,24 @@ async function loadTherapists() {
       THERAPISTS = res.therapists;
       const names = Object.keys(THERAPISTS);
       ['therapist','closeTherapist','payTherapist'].forEach(id => {
-        const sel = document.getElementById(id);
-        const cur = sel.value;
-        sel.innerHTML = '<option value="">選択</option>';
+        const el = document.getElementById(id);
+        if(!el) return;
+        const cur = el.value;
+        el.innerHTML = '<option value="">選択</option>';
         names.forEach(n => {
           const opt = document.createElement('option');
           opt.value = n; opt.textContent = n;
-          sel.appendChild(opt);
+          el.appendChild(opt);
         });
-        if(cur) sel.value = cur;
+        if(cur) el.value = cur;
       });
+      // cancelDateに今日の日付をセット
+      const cancelDateEl = document.getElementById('cancelDate');
+      if(cancelDateEl) {
+        const now = new Date();
+        const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+        cancelDateEl.value = local.toISOString().slice(0,10);
+      }
     }
   } catch(e) { console.error(e); }
 }
