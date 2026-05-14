@@ -411,6 +411,7 @@ async function init() {
   document.getElementById('payDate').value = today;
 
   await loadTherapists();
+  onCourseChange();
   loadDashboard();
 }
 
