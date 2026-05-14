@@ -171,8 +171,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
 <!-- ===== ダッシュボード ===== -->
 <div id="page-dash" class="page active">
-  <div class="page-header"><div class="page-title">NEO LUXE</div><div class="page-sub">MANAGEMENT SYSTEM</div></div>
   <div style="padding:16px 0 0;">
+    <div style="text-align:center;padding:10px 0 16px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:var(--gold);letter-spacing:.2em;">NEO LUXE</div>
+      <div style="font-size:.62rem;color:var(--text3);letter-spacing:.15em;margin-top:2px;">MANAGEMENT SYSTEM</div>
+    </div>
     <div class="dash-grid">
       <div class="dash-card">
         <div class="dash-num" id="d-sales">—</div>
@@ -195,7 +198,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <div class="card-label">セラピスト別売上</div>
       <div id="d-therapists"><div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">読み込み中...</div></div>
     </div>
-    <button class="btn btn-gold" onclick="loadDashboard()" style="position:relative;z-index:10;touch-action:manipulation;">🔄 更新</button>
+    <div style="padding:0 0 10px;">
+      <button onclick="loadDashboard()" style="background:linear-gradient(135deg,var(--gold),var(--gold3));border:none;border-radius:8px;color:var(--bg);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.88rem;font-weight:700;padding:14px;width:100%;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0.1);">🔄 更新</button>
+    </div>
   </div>
 </div>
 
