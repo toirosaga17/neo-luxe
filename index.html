@@ -67,7 +67,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 .fg.full{grid-column:1/-1;}
 label{font-size:.65rem;color:var(--text3);letter-spacing:.05em;}
 input,select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:.82rem;padding:10px 8px;outline:none;transition:border-color .2s;width:100%;touch-action:manipulation;box-sizing:border-box;min-width:0;max-width:100%;display:block;}
-input:focus,select:focus{border-color:var(--gold);}input[type=datetime-local],input[type=date]{font-size:.75rem;}
+input:focus,select:focus{border-color:var(--gold);}input[type=datetime-local]{font-size:.75rem;}input[type=date]{font-size:.75rem;background:var(--bg3);color:var(--text);-webkit-text-fill-color:var(--text);}
 select option{background:var(--bg3);}
 input[type=number]{-moz-appearance:textfield;}
 input[type=number]::-webkit-outer-spin-button,
@@ -144,7 +144,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .cust-detail{color:var(--text3);font-size:.7rem;margin-top:4px;line-height:1.6;}
 
 /* 締めグリッド */
-.close-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}.close-grid .fg{min-width:0;overflow:hidden;}
+.close-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px;}.close-grid .fg{min-width:0;overflow:hidden;}
 
 /* 区切り */
 .divider{height:1px;background:var(--border);margin:14px 0;}
@@ -239,7 +239,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
           <option value="60">60分</option>
         </select>
       </div>
-      <div class="fg">
+      <div class="fg full">
         <label>部屋番号</label>
         <input type="text" id="room" placeholder="例：503">
       </div>
