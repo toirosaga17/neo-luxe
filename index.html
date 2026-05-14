@@ -377,6 +377,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <button class="btn btn-gold" onclick="loadUnpaid()">🔄 読み込む</button>
     <div id="unpaidList" style="margin-top:12px;"></div>
   </div>
+
+  <div class="card">
+    <div class="card-label">予約キャンセル</div>
+    <div class="fg">
+      <label>日付</label>
+      <input type="date" id="cancelDate">
+    </div>
+    <button class="btn btn-gold" onclick="loadTodayBookings()" style="margin-top:8px;touch-action:manipulation;">📋 予約一覧を表示</button>
+    <div id="todayBookingList" style="margin-top:12px;"></div>
+    <div class="status" id="cancelStatus"></div>
+  </div>
 </div>
 
 <!-- ===== 顧客管理 ===== -->
