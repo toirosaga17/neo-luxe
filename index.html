@@ -380,11 +380,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
   <div class="card">
     <div class="card-label">予約キャンセル</div>
-    <div class="fg">
-      <label>日付</label>
-      <input type="date" id="cancelDate">
+    <div class="fg" style="margin-bottom:10px;">
+      <label>日付（例：5/15）</label>
+      <input type="text" id="cancelDateText" placeholder="例：5/15" style="font-size:.9rem;">
     </div>
-    <button class="btn btn-gold" onclick="loadTodayBookings()" style="margin-top:8px;touch-action:manipulation;">📋 予約一覧を表示</button>
+    <button onclick="loadTodayBookings()" style="background:linear-gradient(135deg,var(--gold),var(--gold3));border:none;border-radius:8px;color:var(--bg);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.88rem;font-weight:700;padding:14px;width:100%;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0.1);">📋 予約一覧を表示</button>
     <div id="todayBookingList" style="margin-top:12px;"></div>
     <div class="status" id="cancelStatus"></div>
   </div>
@@ -451,12 +451,7 @@ async function loadTherapists() {
         if(cur) el.value = cur;
       });
       // cancelDateに今日の日付をセット
-      const cancelDateEl = document.getElementById('cancelDate');
-      if(cancelDateEl) {
-        const now = new Date();
-        const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
-        cancelDateEl.value = local.toISOString().slice(0,10);
-      }
+      
     }
   } catch(e) { console.error(e); }
 }
@@ -716,13 +711,11 @@ async function cancelBooking() {
 }
 
 async function loadTodayBookings() {
-  const date = document.getElementById('cancelDate').value;
-  if(!date){alert('日付を選択してください');return;}
+  const dateStr = document.getElementById('cancelDateText').value.trim();
+  if(!dateStr){alert('日付を入力してください（例：5/15）');return;}
   const list = document.getElementById('todayBookingList');
   list.innerHTML = '<div style="color:var(--text3);font-size:.8rem;text-align:center;">読み込み中...</div>';
   try{
-    const d = new Date(date);
-    const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
     const res = await post({action:'getTodayBookings', date:dateStr});
     if(res.success){
       if(res.bookings.length === 0){
@@ -750,9 +743,7 @@ async function cancelByRow(row, therapist, time) {
     const res = await post({action:'cancelByRow', row});
     if(res.success){
       setStatus('cancelStatus','キャンセル完了！','ok');
-      const date = document.getElementById('cancelDate').value;
-      const d = new Date(date);
-      const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+      const dateStr = document.getElementById('cancelDateText').value.trim();
       const res2 = await post({action:'getTodayBookings', date:dateStr});
       if(res2.success){
         document.getElementById('todayBookingList').innerHTML = res2.bookings.length ? res2.bookings.map(b=>`
