@@ -66,8 +66,8 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 .fg{display:flex;flex-direction:column;gap:5px;}
 .fg.full{grid-column:1/-1;}
 label{font-size:.65rem;color:var(--text3);letter-spacing:.05em;}
-input,select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:.9rem;padding:10px 12px;outline:none;transition:border-color .2s;width:100%;touch-action:manipulation;}
-input:focus,select:focus{border-color:var(--gold);}
+input,select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:.9rem;padding:10px 12px;outline:none;transition:border-color .2s;width:100%;touch-action:manipulation;max-width:100%;}
+input:focus,select:focus{border-color:var(--gold);}input[type=datetime-local]{font-size:.75rem;padding:10px 8px;}
 select option{background:var(--bg3);}
 input[type=number]{-moz-appearance:textfield;}
 input[type=number]::-webkit-outer-spin-button,
