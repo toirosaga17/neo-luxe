@@ -6,220 +6,100 @@
 <title>NEO LUXE 予約管理</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Cormorant+Garamond:wght@300;400;600&display=swap');
-
   :root {
-    --gold: #c9a96e;
-    --dark: #0a0a0a;
-    --dark2: #111111;
-    --dark3: #1a1a1a;
-    --dark4: #222222;
-    --text: #e8e8e8;
-    --text-muted: #888;
-    --border: #2a2a2a;
-    --success: #4caf7d;
+    --gold: #c9a96e; --dark: #0a0a0a; --dark2: #111111;
+    --dark3: #1a1a1a; --dark4: #222222; --text: #e8e8e8;
+    --text-muted: #888; --border: #2a2a2a; --success: #4caf7d;
+    --danger: #e57373;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--dark); color: var(--text); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; padding-bottom: 40px; }
 
-  body {
-    background: var(--dark);
-    color: var(--text);
-    font-family: 'Noto Sans JP', sans-serif;
-    min-height: 100vh;
-    padding: 20px;
-  }
+  /* ヘッダー */
+  .header { text-align: center; padding: 24px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 0; }
+  .header h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; color: var(--gold); letter-spacing: 0.3em; }
+  .header p { color: var(--text-muted); font-size: 0.7rem; letter-spacing: 0.2em; margin-top: 4px; }
 
-  .header {
-    text-align: center;
-    padding: 30px 0 20px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 30px;
-  }
+  /* タブ */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--dark2); }
+  .tab { flex: 1; padding: 14px 8px; text-align: center; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; letter-spacing: 0.1em; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
 
-  .header h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2rem;
-    font-weight: 300;
-    color: var(--gold);
-    letter-spacing: 0.3em;
-  }
+  /* タブコンテンツ */
+  .tab-content { display: none; padding: 20px; }
+  .tab-content.active { display: block; }
 
-  .header p {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    letter-spacing: 0.2em;
-    margin-top: 6px;
-  }
+  /* カード */
+  .card { background: var(--dark2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 0.68rem; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .card {
-    background: var(--dark2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 20px;
-  }
-
-  .card-title {
-    font-size: 0.7rem;
-    letter-spacing: 0.25em;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .card-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  label {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    letter-spacing: 0.1em;
-  }
-
-  input, select {
-    background: var(--dark3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'Noto Sans JP', sans-serif;
-    font-size: 0.9rem;
-    padding: 10px 14px;
-    outline: none;
-    transition: border-color 0.2s;
-    width: 100%;
-  }
-
+  /* フォーム */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.08em; }
+  input, select { background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem; padding: 9px 12px; outline: none; transition: border-color 0.2s; width: 100%; }
   input:focus, select:focus { border-color: var(--gold); }
   select option { background: var(--dark3); }
 
-  .options-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
+  /* オプション */
+  .options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .option-btn { background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-family: 'Noto Sans JP', sans-serif; font-size: 0.72rem; padding: 8px 4px; text-align: center; transition: all 0.2s; user-select: none; line-height: 1.5; touch-action: manipulation; -webkit-tap-highlight-color: rgba(0,0,0,0.1); position: relative; z-index: 1; }
+  .option-btn.active { background: var(--dark4); border-color: var(--gold); color: var(--gold); }
+  .option-price { font-size: 0.62rem; color: var(--gold); opacity: 0.8; }
 
-  .option-btn {
-    background: var(--dark3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-family: 'Noto Sans JP', sans-serif;
-    font-size: 0.75rem;
-    padding: 8px 4px;
-    text-align: center;
-    transition: all 0.2s;
-    user-select: none;
-    line-height: 1.5;
-  }
+  /* ボタン */
+  .btn { border: none; border-radius: 10px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; padding: 14px; transition: opacity 0.2s; width: 100%; margin-top: 8px; position: relative; z-index: 1; touch-action: manipulation; -webkit-tap-highlight-color: rgba(0,0,0,0.1); }
+  .btn:hover { opacity: 0.88; }
+  .btn-gold { background: linear-gradient(135deg, var(--gold), #a07840); color: var(--dark); }
+  .btn-green { background: linear-gradient(135deg, #4caf7d, #2e7d52); color: #fff; }
+  .btn-blue { background: linear-gradient(135deg, #5b9bd5, #2d6a9f); color: #fff; }
+  .btn-red { background: linear-gradient(135deg, #e57373, #c62828); color: #fff; }
+  .btn-outline { background: var(--dark4); border: 1px solid var(--border); color: var(--text-muted); border-radius: 8px; padding: 10px; font-size: 0.8rem; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; width: 100%; margin-top: 6px; transition: all 0.2s; }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-outline.copied { border-color: var(--success); color: var(--success); }
 
-  .option-btn.active {
-    background: var(--dark4);
-    border-color: var(--gold);
-    color: var(--gold);
-  }
-
-  .option-price {
-    font-size: 0.65rem;
-    color: var(--gold);
-    opacity: 0.8;
-  }
-
-  .generate-btn {
-    background: linear-gradient(135deg, var(--gold), #a07840);
-    border: none;
-    border-radius: 10px;
-    color: var(--dark);
-    cursor: pointer;
-    font-family: 'Noto Sans JP', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    padding: 16px;
-    transition: opacity 0.2s;
-    width: 100%;
-    margin-top: 8px;
-  }
-
-  .generate-btn:hover { opacity: 0.9; }
-
-  .output-box {
-    background: var(--dark3);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    margin-top: 12px;
-  }
-
-  .output-label {
-    font-size: 0.68rem;
-    letter-spacing: 0.2em;
-    color: var(--gold);
-    margin-bottom: 10px;
-  }
-
-  .output-text {
-    color: var(--text);
-    font-size: 0.85rem;
-    line-height: 1.8;
-    white-space: pre-wrap;
-    word-break: break-all;
-  }
-
-  .copy-btn {
-    background: var(--dark4);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-family: 'Noto Sans JP', sans-serif;
-    font-size: 0.75rem;
-    margin-top: 12px;
-    padding: 8px 16px;
-    transition: all 0.2s;
-    width: 100%;
-  }
-
-  .copy-btn:hover { border-color: var(--gold); color: var(--gold); }
-  .copy-btn.copied { border-color: var(--success); color: var(--success); }
-
-  .price-display {
-    background: var(--dark3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-  }
-
-  .price-label { font-size: 0.78rem; color: var(--text-muted); }
+  /* 合計表示 */
+  .price-display { background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .price-label { font-size: 0.75rem; color: var(--text-muted); }
   .price-value { font-size: 1.1rem; color: var(--gold); font-weight: 500; }
+
+  /* 出力ボックス */
+  .output-box { background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 10px; }
+  .output-label { font-size: 0.65rem; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 8px; }
+  .output-text { color: var(--text); font-size: 0.82rem; line-height: 1.8; white-space: pre-wrap; word-break: break-all; }
+
+  /* 報酬明細行 */
+  .reward-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 0.85rem; }
+  .reward-row.indent { padding-left: 14px; font-size: 0.78rem; }
+  .reward-row.total { border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px; font-size: 1rem; }
+  .reward-note { font-size: 0.68rem; color: var(--text-muted); margin-top: 6px; }
+
+  /* ステータス */
+  .status-msg { text-align: center; font-size: 0.82rem; margin-top: 10px; min-height: 20px; }
+
+  /* 未払いリスト */
+  .unpaid-item { background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+  .unpaid-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .unpaid-name { color: var(--gold); font-weight: 500; }
+  .unpaid-date { color: var(--text-muted); font-size: 0.78rem; }
+  .unpaid-detail { font-size: 0.78rem; color: var(--text-muted); line-height: 1.8; }
+  .unpaid-total { color: var(--text); font-size: 1rem; font-weight: 500; margin-top: 6px; }
+
+  /* 顧客リスト */
+  .customer-item { background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+  .customer-name { color: var(--gold); font-size: 0.95rem; font-weight: 500; }
+  .customer-phone { color: var(--text); font-size: 0.9rem; margin-top: 2px; }
+  .customer-detail { color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; }
+  .search-box { margin-bottom: 14px; }
+
+  /* 締めセレクタ */
+  .close-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 
   @media (max-width: 480px) {
     .form-grid { grid-template-columns: 1fr; }
     .options-grid { grid-template-columns: repeat(2, 1fr); }
-    .header h1 { font-size: 1.5rem; }
+    .close-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -230,264 +110,515 @@
   <p>RESERVATION MANAGEMENT</p>
 </div>
 
-<div class="card">
-  <div class="card-title">予約情報</div>
-  <div class="form-grid">
-    <div class="form-group">
-      <label>セラピスト名</label>
-      <select id="therapist">
-        <option value="">選択してください</option>
-        <option>みく</option>
-        <option>りょう</option>
-        <option>ゆとり</option>
-        <option>かすみ</option>
-        <option>のあ</option>
-        <option>れい</option>
-        <option>ゆゆ</option>
-        <option>ちどり</option>
-        <option>さき</option>
-        <option>ゆな</option>
-        <option>あいな</option>
-        <option>かほ</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>指名種別</label>
-      <select id="shimei">
-        <option value="フリー">フリー</option>
-        <option value="指名">指名</option>
-        <option value="本指名">本指名</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>予約日時</label>
-      <input type="datetime-local" id="datetime">
-    </div>
-
-    <div class="form-group">
-      <label>コース</label>
-      <select id="course">
-        <option value="スタンダード">スタンダード</option>
-        <option value="レオナール">レオナール</option>
-        <option value="アルミラージ">アルミラージ</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>コース時間（分）</label>
-      <select id="duration">
-        <option value="60">60分</option>
-        <option value="75">75分</option>
-        <option value="90">90分</option>
-        <option value="100">100分</option>
-        <option value="120">120分</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>部屋番号</label>
-      <input type="text" id="room" placeholder="例：503">
-    </div>
-
-    <div class="form-group">
-      <label>お客様名</label>
-      <input type="text" id="customer" placeholder="例：カジ様">
-    </div>
-
-    <div class="form-group">
-      <label>コース料金（円）</label>
-      <input type="number" id="coursePrice" placeholder="例：15000" oninput="calcTotal()">
-    </div>
-
-    <div class="form-group">
-      <label>指名料（円）</label>
-      <select id="shimeiPrice" onchange="calcTotal()">
-        <option value="0">0円</option>
-        <option value="1000">1,000円</option>
-        <option value="2000">2,000円</option>
-        <option value="3000">3,000円</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- オプション -->
-  <div style="margin-top: 16px;">
-    <label style="display:block; margin-bottom: 10px; font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.1em;">
-      オプション &nbsp;<span style="font-size:0.65rem;">（お客様料金 / セラピストバック）</span>
-    </label>
-    <div class="options-grid">
-      <div class="option-btn" onclick="toggleOption(this, 'スタ増量', 1500, 1000)">
-        スタ増量<br><span class="option-price">¥1,500 / ¥1,000</span>
-      </div>
-      <div class="option-btn" onclick="toggleOption(this, 'レオ増量', 2000, 1500)">
-        レオ増量<br><span class="option-price">¥2,000 / ¥1,500</span>
-      </div>
-      <div class="option-btn" onclick="toggleOption(this, 'アル増量', 2500, 2000)">
-        アル増量<br><span class="option-price">¥2,500 / ¥2,000</span>
-      </div>
-      <div class="option-btn" onclick="toggleOption(this, '贅沢', 3000, 2000)">
-        贅沢<br><span class="option-price">¥3,000 / ¥2,000</span>
-      </div>
-      <div class="option-btn" onclick="toggleOption(this, '集中', 1000, 1000)">
-        集中<br><span class="option-price">¥1,000 / ¥1,000</span>
-      </div>
-      <div class="option-btn" onclick="toggleOption(this, '衣装', 3000, 2000)">
-        衣装<br><span class="option-price">¥3,000 / ¥2,000</span>
-      </div>
-      <div class="option-btn" onclick="toggleOption(this, 'ヘッドスパ', 1000, 1000)">
-        ヘッドスパ<br><span class="option-price">¥1,000 / ¥1,000</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 割引 -->
-  <div class="form-grid" style="margin-top: 14px;">
-    <div class="form-group">
-      <label>割引内容</label>
-      <input type="text" id="discount" placeholder="例：初回割引">
-    </div>
-    <div class="form-group">
-      <label>割引額（円）</label>
-      <input type="number" id="discountAmount" placeholder="0" oninput="calcTotal()">
-    </div>
-  </div>
-
-  <div class="price-display">
-    <span class="price-label">お客様支払い合計</span>
-    <span class="price-value" id="totalPrice">¥0</span>
-  </div>
-
-  <button class="generate-btn" onclick="generate()">定型文を生成する</button>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('booking')">📋 予約入力</div>
+  <div class="tab" onclick="switchTab('payment')">💰 締め・支払い</div>
+  <div class="tab" onclick="switchTab('customer')">👤 顧客管理</div>
 </div>
 
-<!-- SMS出力 -->
-<div class="card" id="smsCard" style="display:none;">
-  <div class="card-title">お客様SMS</div>
-  <div class="output-box">
-    <div class="output-label">▼ コピーしてSMSに貼り付け</div>
-    <div class="output-text" id="smsText"></div>
-  </div>
-  <button class="copy-btn" id="smsCopyBtn" onclick="copyText('smsText', 'smsCopyBtn')">📋 コピー</button>
-</div>
+<!-- ========== TAB1: 予約入力 ========== -->
+<div id="tab-booking" class="tab-content active">
 
-<!-- LINE出力 -->
-<div class="card" id="lineCard" style="display:none;">
-  <div class="card-title">セラピストLINE</div>
-  <div class="output-box">
-    <div class="output-label">▼ コピーしてLINEに貼り付け</div>
-    <div class="output-text" id="lineText"></div>
+  <div class="card">
+    <div class="card-title">予約情報</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>セラピスト名</label>
+        <select id="therapist">
+          <option value="">選択してください</option>
+          <option>みく</option><option>りょう</option><option>ゆとり</option>
+          <option>かすみ</option><option>のあ</option><option>れい</option>
+          <option>ゆゆ</option><option>ちどり</option><option>さき</option>
+          <option>ゆな</option><option>あいな</option><option>かほ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>指名種別</label>
+        <select id="shimei">
+          <option value="フリー">フリー</option>
+          <option value="指名">指名</option>
+          <option value="本指名">本指名</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>予約日時</label>
+        <input type="datetime-local" id="datetime">
+      </div>
+      <div class="form-group">
+        <label>コース</label>
+        <select id="course">
+          <option value="スタンダード">スタンダード</option>
+          <option value="レオナール">レオナール</option>
+          <option value="アルミラージ">アルミラージ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>コース時間（分）</label>
+        <select id="duration">
+          <option value="60">60分</option><option value="75">75分</option>
+          <option value="90">90分</option><option value="100">100分</option>
+          <option value="120">120分</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>部屋番号</label>
+        <input type="text" id="room" placeholder="例：503">
+      </div>
+      <div class="form-group">
+        <label>お客様名</label>
+        <input type="text" id="customer" placeholder="例：カジ様">
+      </div>
+      <div class="form-group">
+        <label>電話番号</label>
+        <input type="tel" id="phone" placeholder="例：09012345678">
+      </div>
+      <div class="form-group">
+        <label>コース料金（円）</label>
+        <input type="number" id="coursePrice" placeholder="例：10000" oninput="calcTotal()">
+      </div>
+      <div class="form-group">
+        <label>指名料（円）</label>
+        <select id="shimeiPrice" onchange="calcTotal()">
+          <option value="0">0円</option>
+          <option value="1000">1,000円</option>
+          <option value="2000">2,000円</option>
+          <option value="3000">3,000円</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <label style="display:block;margin-bottom:8px;font-size:0.7rem;color:var(--text-muted);letter-spacing:0.08em;">
+        オプション <span style="font-size:0.62rem;">（お客様料金 / セラピストバック）</span>
+      </label>
+      <div class="options-grid">
+        <div class="option-btn" onclick="toggleOption(this,'スタ増量',1500,1000)">スタ増量<br><span class="option-price">¥1,500/¥1,000</span></div>
+        <div class="option-btn" onclick="toggleOption(this,'レオ増量',2000,1500)">レオ増量<br><span class="option-price">¥2,000/¥1,500</span></div>
+        <div class="option-btn" onclick="toggleOption(this,'アル増量',2500,2000)">アル増量<br><span class="option-price">¥2,500/¥2,000</span></div>
+        <div class="option-btn" onclick="toggleOption(this,'贅沢',3000,2000)">贅沢<br><span class="option-price">¥3,000/¥2,000</span></div>
+        <div class="option-btn" onclick="toggleOption(this,'集中',1000,1000)">集中<br><span class="option-price">¥1,000/¥1,000</span></div>
+        <div class="option-btn" onclick="toggleOption(this,'衣装',3000,2000)">衣装<br><span class="option-price">¥3,000/¥2,000</span></div>
+        <div class="option-btn" onclick="toggleOption(this,'ヘッドスパ',1000,1000)">ヘッドスパ<br><span class="option-price">¥1,000/¥1,000</span></div>
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:12px;">
+      <div class="form-group">
+        <label>割引内容</label>
+        <input type="text" id="discount" placeholder="例：初回割引">
+      </div>
+      <div class="form-group">
+        <label>割引額（円）</label>
+        <input type="number" id="discountAmount" placeholder="0" oninput="calcTotal()">
+      </div>
+    </div>
+
+    <div class="price-display">
+      <span class="price-label">お客様支払い合計</span>
+      <span class="price-value" id="totalPrice">¥0</span>
+    </div>
+
+    <button class="btn btn-gold" onclick="generate()">定型文を生成する</button>
   </div>
-  <button class="copy-btn" id="lineCopyBtn" onclick="copyText('lineText', 'lineCopyBtn')">📋 コピー</button>
-</div>
+
+  <!-- 報酬明細 -->
+  <div class="card" id="rewardCard" style="display:none;">
+    <div class="card-title">報酬明細</div>
+    <div id="rewardText"></div>
+  </div>
+
+  <!-- スプレッドシート記録 -->
+  <div class="card" id="recordCard" style="display:none;">
+    <div class="card-title">スプレッドシートに記録</div>
+    <button class="btn btn-green" id="recordBtn" onclick="recordToSheet()">📊 売上・給与をスプレッドシートに記録する</button>
+    <div class="status-msg" id="recordStatus"></div>
+  </div>
+
+  <!-- SMS出力 -->
+  <div class="card" id="smsCard" style="display:none;">
+    <div class="card-title">お客様SMS</div>
+    <div class="output-box">
+      <div class="output-label">▼ コピーしてSMSに貼り付け</div>
+      <div class="output-text" id="smsText"></div>
+    </div>
+    <button class="btn-outline" id="smsCopyBtn" onclick="copyText('smsText','smsCopyBtn')">📋 コピー</button>
+  </div>
+
+  <!-- LINE出力 -->
+  <div class="card" id="lineCard" style="display:none;">
+    <div class="card-title">セラピストLINE</div>
+    <div class="output-box">
+      <div class="output-label">▼ コピーしてLINEに貼り付け</div>
+      <div class="output-text" id="lineText"></div>
+    </div>
+    <button class="btn-outline" id="lineCopyBtn" onclick="copyText('lineText','lineCopyBtn')">📋 コピー</button>
+  </div>
+
+</div><!-- /tab-booking -->
+
+<!-- ========== TAB2: 締め・支払い ========== -->
+<div id="tab-payment" class="tab-content">
+
+  <!-- 本日締め -->
+  <div class="card">
+    <div class="card-title">本日締め</div>
+    <div class="close-grid">
+      <div class="form-group">
+        <label>セラピスト</label>
+        <select id="closeTherapist">
+          <option value="">選択してください</option>
+          <option>みく</option><option>りょう</option><option>ゆとり</option>
+          <option>かすみ</option><option>のあ</option><option>れい</option>
+          <option>ゆゆ</option><option>ちどり</option><option>さき</option>
+          <option>ゆな</option><option>あいな</option><option>かほ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>日付</label>
+        <input type="date" id="closeDate">
+      </div>
+    </div>
+    <button class="btn btn-blue" onclick="closeDay()">🔒 本日締め・売上バック確定</button>
+    <div class="status-msg" id="closeStatus"></div>
+    <div id="closeResult" style="display:none;" class="output-box" style="margin-top:10px;">
+      <div id="closeResultText" style="font-size:0.85rem;line-height:1.8;"></div>
+    </div>
+  </div>
+
+  <!-- 支払い処理 -->
+  <div class="card">
+    <div class="card-title">支払い処理</div>
+    <div class="close-grid">
+      <div class="form-group">
+        <label>セラピスト</label>
+        <select id="payTherapist">
+          <option value="">選択してください</option>
+          <option>みく</option><option>りょう</option><option>ゆとり</option>
+          <option>かすみ</option><option>のあ</option><option>れい</option>
+          <option>ゆゆ</option><option>ちどり</option><option>さき</option>
+          <option>ゆな</option><option>あいな</option><option>かほ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>日付</label>
+        <input type="date" id="payDate">
+      </div>
+      <div class="form-group">
+        <label>交通費（円）</label>
+        <input type="number" id="transport" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>繰越額（円）</label>
+        <input type="number" id="carryover" placeholder="0">
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="updatePayment()">✅ 支払済みにする</button>
+    <div class="status-msg" id="payStatus"></div>
+  </div>
+
+  <!-- 未払い一覧 -->
+  <div class="card">
+    <div class="card-title">未払い一覧</div>
+    <button class="btn btn-gold" onclick="loadUnpaid()">🔄 未払い一覧を読み込む</button>
+    <div id="unpaidList" style="margin-top:14px;"></div>
+  </div>
+
+</div><!-- /tab-payment -->
+
+<!-- ========== TAB3: 顧客管理 ========== -->
+<div id="tab-customer" class="tab-content">
+  <div class="card">
+    <div class="card-title">顧客検索</div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="電話番号またはお名前で検索" oninput="filterCustomers()">
+    </div>
+    <button class="btn btn-gold" onclick="loadCustomers()">🔄 顧客リストを読み込む</button>
+    <div id="customerList" style="margin-top:14px;"></div>
+  </div>
+</div><!-- /tab-customer -->
 
 <script>
-  let selectedOptions = [];
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyKwmlax7SruOpDHN328jNOkUem-ILD0yB1JMUmr6-wVmidDKDKIiJAp4HvZC68DW9Cug/exec';
 
-  const now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-  document.getElementById('datetime').value = now.toISOString().slice(0,16);
+const THERAPIST_DATA = {
+  'みく':   { sta:60,leo:55,alm:55,threshold1:60000,back1:500,threshold2:80000,back2:1000,free:500,shimei:500,honshimei:1500 },
+  'りょう': { sta:60,leo:55,alm:55,threshold1:60000,back1:500,threshold2:80000,back2:1000,free:500,shimei:500,honshimei:1500 },
+  'ゆとり': { sta:60,leo:55,alm:55,threshold1:60000,back1:500,threshold2:80000,back2:1000,free:500,shimei:500,honshimei:1500 },
+  'かすみ': { sta:60,leo:55,alm:55,threshold1:60000,back1:500,threshold2:80000,back2:1000,free:500,shimei:500,honshimei:1500 },
+  'のあ':   { sta:60,leo:55,alm:55,threshold1:60000,back1:500,threshold2:80000,back2:1000,free:500,shimei:500,honshimei:1500 },
+  'れい':   { sta:60,leo:55,alm:55,threshold1:60000,back1:500,threshold2:0,back2:0,free:500,shimei:500,honshimei:1000 },
+  'ゆゆ':   { sta:60,leo:55,alm:55,threshold1:60000,back1:500,threshold2:0,back2:0,free:500,shimei:500,honshimei:1000 },
+  'ちどり': { sta:60,leo:55,alm:55,threshold1:60000,back1:500,threshold2:0,back2:0,free:500,shimei:500,honshimei:1000 },
+  'さき':   { sta:55,leo:50,alm:50,threshold1:60000,back1:500,threshold2:0,back2:0,free:0,shimei:500,honshimei:1000 },
+  'ゆな':   { sta:55,leo:50,alm:50,threshold1:60000,back1:500,threshold2:0,back2:0,free:0,shimei:500,honshimei:1000 },
+  'あいな': { sta:60,leo:55,alm:55,threshold1:80000,back1:1000,threshold2:0,back2:0,free:500,shimei:500,honshimei:1000 },
+  'かほ':   { sta:65,leo:60,alm:60,threshold1:60000,back1:500,threshold2:80000,back2:1000,free:500,shimei:500,honshimei:1500 },
+};
+const OPTION_BACKS = { 'スタ増量':1000,'レオ増量':1500,'アル増量':2000,'贅沢':2000,'集中':1000,'衣装':2000,'ヘッドスパ':1000 };
 
-  function toggleOption(el, name, price, back) {
-    const idx = selectedOptions.findIndex(o => o.name === name);
-    if (idx >= 0) {
-      selectedOptions.splice(idx, 1);
-      el.classList.remove('active');
-    } else {
-      selectedOptions.push({ name, price, back });
-      el.classList.add('active');
-    }
-    calcTotal();
-  }
+let selectedOptions = [];
+let lastData = null;
+let allCustomers = [];
 
-  function calcTotal() {
-    const coursePrice = parseInt(document.getElementById('coursePrice').value) || 0;
-    const shimeiPrice = parseInt(document.getElementById('shimeiPrice').value) || 0;
-    const discountAmount = parseInt(document.getElementById('discountAmount').value) || 0;
-    const optionTotal = selectedOptions.reduce((s, o) => s + o.price, 0);
-    const total = coursePrice + shimeiPrice + optionTotal - discountAmount;
-    document.getElementById('totalPrice').textContent = '¥' + total.toLocaleString();
-    return total;
-  }
+// 今日の日付セット
+const now = new Date();
+const todayStr = now.toISOString().slice(0,10);
+now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+document.getElementById('datetime').value = now.toISOString().slice(0,16);
+document.getElementById('closeDate').value = todayStr;
+document.getElementById('payDate').value = todayStr;
 
-  function formatDatetime(dtStr) {
-    const dt = new Date(dtStr);
-    const month = dt.getMonth() + 1;
-    const day = dt.getDate();
-    const hours = dt.getHours();
-    const minutes = String(dt.getMinutes()).padStart(2, '0');
-    return {
-      date: `${month}/${day}`,
-      time: `${hours}時${minutes}分`,
-      full: `${month}/${day}  ${hours}:${minutes}`
-    };
-  }
+// タブ切り替え
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const tabs = ['booking','payment','customer'];
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
 
-  function generate() {
-    const therapist = document.getElementById('therapist').value;
-    const shimei = document.getElementById('shimei').value;
-    const datetimeStr = document.getElementById('datetime').value;
-    const course = document.getElementById('course').value;
-    const duration = document.getElementById('duration').value;
-    const room = document.getElementById('room').value;
-    const customer = document.getElementById('customer').value;
-    const coursePrice = parseInt(document.getElementById('coursePrice').value) || 0;
-    const discount = document.getElementById('discount').value;
-    const total = calcTotal();
+function toggleOption(el, name, price, back) {
+  const idx = selectedOptions.findIndex(o => o.name === name);
+  if (idx >= 0) { selectedOptions.splice(idx,1); el.classList.remove('active'); }
+  else { selectedOptions.push({name,price,back}); el.classList.add('active'); }
+  calcTotal();
+}
 
-    if (!therapist || !room || !datetimeStr) {
-      alert('セラピスト・部屋番号・日時は必須です');
-      return;
-    }
+function calcTotal() {
+  const cp = parseInt(document.getElementById('coursePrice').value) || 0;
+  const sp = parseInt(document.getElementById('shimeiPrice').value) || 0;
+  const da = parseInt(document.getElementById('discountAmount').value) || 0;
+  const ot = selectedOptions.reduce((s,o) => s+o.price, 0);
+  const total = cp + sp + ot - da;
+  document.getElementById('totalPrice').textContent = '¥' + total.toLocaleString();
+  return total;
+}
 
-    const dt = formatDatetime(datetimeStr);
-    const optionNames = selectedOptions.length > 0 ? selectedOptions.map(o => o.name).join('・') : '';
-    const courseLabel = `${course}${duration}`;
+function formatDt(dtStr) {
+  const dt = new Date(dtStr);
+  const m = dt.getMonth()+1, d = dt.getDate(), h = dt.getHours(), min = String(dt.getMinutes()).padStart(2,'0');
+  return { date:`${m}/${d}`, time:`${h}時${min}分`, full:`${m}/${d}  ${h}:${min}` };
+}
 
-    const sms = `メンズエステ店の中からNEO LUXEをお選びいただき、
-誠に有難うございます。
-当店は【厳選されたセラピスト】のみが在籍している店舗でございます。
-自信を持ってご案内させていただきます。
-お客様にとって癒しのお時間になる事を心より願っております🌱
-【〒790-0878】
-【勝山アリストシード】
-松山市勝山町1丁目1-15
-時間:${dt.full}
-ルーム:${room}
-上記のマンションに到着されましたらお手数をおかけしますが、
-以下のURLをタップしていただき、
-【電話】を押しご連絡をよろしくお願いいたします。
-https://estama.jp/shop/29585/`;
+function generate() {
+  const therapist = document.getElementById('therapist').value;
+  const shimei = document.getElementById('shimei').value;
+  const datetimeStr = document.getElementById('datetime').value;
+  const course = document.getElementById('course').value;
+  const duration = document.getElementById('duration').value;
+  const room = document.getElementById('room').value;
+  const customer = document.getElementById('customer').value;
+  const phone = document.getElementById('phone').value;
+  const coursePrice = parseInt(document.getElementById('coursePrice').value) || 0;
+  const shimeiPriceVal = parseInt(document.getElementById('shimeiPrice').value) || 0;
+  const discount = document.getElementById('discount').value;
+  const discountAmount = parseInt(document.getElementById('discountAmount').value) || 0;
+  const total = calcTotal();
 
-    const line = `▫日付:${dt.date}
-▫担当セラピスト: ${therapist}${shimei === 'フリー' ? '' : shimei}
-▫時間:${dt.time}
-▫コース:${courseLabel}
-▫オプション:${optionNames}
-▫お名前:${customer}
-▫割引内容:${discount}
-▫お客様支払い合計:${total.toLocaleString()}`;
+  if (!therapist || !room || !datetimeStr) { alert('セラピスト・部屋番号・日時は必須です'); return; }
 
-    document.getElementById('smsText').textContent = sms;
-    document.getElementById('lineText').textContent = line;
-    document.getElementById('smsCard').style.display = 'block';
-    document.getElementById('lineCard').style.display = 'block';
-    document.getElementById('smsCard').scrollIntoView({ behavior: 'smooth' });
-  }
+  const dt = formatDt(datetimeStr);
 
-  function copyText(id, btnId) {
-    const text = document.getElementById(id).textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.getElementById(btnId);
-      btn.textContent = '✅ コピーしました';
-      btn.classList.add('copied');
-      setTimeout(() => {
-        btn.textContent = '📋 コピー';
-        btn.classList.remove('copied');
-      }, 2000);
+  // 報酬計算
+  const td = THERAPIST_DATA[therapist];
+  let backRate = td.sta;
+  if (course==='レオナール') backRate = td.leo;
+  if (course==='アルミラージ') backRate = td.alm;
+  const basicBack = Math.floor(coursePrice * backRate / 100);
+  let shimeiBack = shimei==='フリー' ? td.free : shimei==='指名' ? td.shimei : td.honshimei;
+  let optionBackAmt = 0;
+  selectedOptions.forEach(o => { optionBackAmt += OPTION_BACKS[o.name]||0; });
+  const rewardTotal = basicBack + shimeiBack + optionBackAmt;
+
+  // 報酬明細HTML
+  let optDetailHTML = '';
+  if (selectedOptions.length > 0) {
+    selectedOptions.forEach(o => {
+      const ob = OPTION_BACKS[o.name]||0;
+      optDetailHTML += `<div class="reward-row indent"><span style="color:var(--text-muted)">　${o.name}（¥${o.price.toLocaleString()}）</span><span>¥${ob.toLocaleString()}</span></div>`;
     });
+  } else {
+    optDetailHTML = `<div class="reward-row indent"><span style="color:var(--text-muted)">　なし</span><span>¥0</span></div>`;
   }
+
+  document.getElementById('rewardText').innerHTML = `
+    <div class="reward-row"><span style="color:var(--text-muted)">担当</span><span>${therapist}（${shimei}）</span></div>
+    <div class="reward-row"><span style="color:var(--text-muted)">コース</span><span>${course}${duration}分</span></div>
+    <div class="reward-row"><span style="color:var(--text-muted)">コース料金</span><span>¥${coursePrice.toLocaleString()}</span></div>
+    <div class="reward-row"><span style="color:var(--text-muted)">コースバック（${backRate}%）</span><span>¥${basicBack.toLocaleString()}</span></div>
+    <div class="reward-row"><span style="color:var(--text-muted)">指名料バック</span><span>¥${shimeiBack.toLocaleString()}</span></div>
+    <div class="reward-row"><span style="color:var(--text-muted)">オプションバック</span><span>¥${optionBackAmt.toLocaleString()}</span></div>
+    ${optDetailHTML}
+    <div class="reward-row total"><span style="color:var(--gold)">本件報酬合計</span><span style="color:var(--gold);font-weight:700;">¥${rewardTotal.toLocaleString()}</span></div>
+    <div class="reward-note">※売上バックは本日締め後に加算されます</div>
+  `;
+
+  // lastData保存
+  lastData = { action:'record', date:dt.date, time:dt.time, therapist, course, coursePrice,
+    shimeiType:shimei, shimeiPrice:shimeiPriceVal, options:selectedOptions,
+    discount, discountAmount, total, customer, phone, duration };
+
+  // 定型文
+  const optionNames = selectedOptions.length>0 ? selectedOptions.map(o=>o.name).join('・') : '';
+  const sms = `メンズエステ店の中からNEO LUXEをお選びいただき、\n誠に有難うございます。\n当店は【厳選されたセラピスト】のみが在籍している店舗でございます。\n自信を持ってご案内させていただきます。\nお客様にとって癒しのお時間になる事を心より願っております🌱\n【〒790-0878】\n【勝山アリストシード】\n松山市勝山町1丁目1-15\n時間:${dt.full}\nルーム:${room}\n上記のマンションに到着されましたらお手数をおかけしますが、\n以下のURLをタップしていただき、\n【電話】を押しご連絡をよろしくお願いいたします。\nhttps://estama.jp/shop/29585/`;
+  const line = `▫日付:${dt.date}\n▫担当セラピスト: ${therapist}${shimei==='フリー'?'':shimei}\n▫時間:${dt.time}\n▫コース:${course}${duration}\n▫オプション:${optionNames}\n▫お名前:${customer}\n▫割引内容:${discount}\n▫お客様支払い合計:${total.toLocaleString()}`;
+
+  document.getElementById('smsText').textContent = sms;
+  document.getElementById('lineText').textContent = line;
+  document.getElementById('rewardCard').style.display = 'block';
+  document.getElementById('recordCard').style.display = 'block';
+  document.getElementById('smsCard').style.display = 'block';
+  document.getElementById('lineCard').style.display = 'block';
+  document.getElementById('rewardCard').scrollIntoView({behavior:'smooth'});
+}
+
+async function recordToSheet() {
+  if (!lastData) { alert('先に定型文を生成してください'); return; }
+  const btn = document.getElementById('recordBtn');
+  const status = document.getElementById('recordStatus');
+  btn.disabled = true; btn.textContent = '送信中...';
+  status.style.color = 'var(--text-muted)'; status.textContent = '';
+  try {
+    const res = await fetch(GAS_URL, { method:'POST', body:JSON.stringify(lastData), headers:{'Content-Type':'text/plain'} });
+    const json = await res.json();
+    if (json.success) {
+      btn.textContent = '✅ 記録完了！';
+      status.style.color = 'var(--success)'; status.textContent = 'スプレッドシートに記録しました';
+    } else { throw new Error(json.error); }
+  } catch(e) {
+    btn.textContent = '📊 売上・給与をスプレッドシートに記録する';
+    status.style.color = 'var(--danger)'; status.textContent = 'エラー: ' + e.message;
+  }
+  btn.disabled = false;
+}
+
+async function closeDay() {
+  const therapist = document.getElementById('closeTherapist').value;
+  const date = document.getElementById('closeDate').value;
+  if (!therapist || !date) { alert('セラピストと日付を選択してください'); return; }
+  const status = document.getElementById('closeStatus');
+  status.style.color = 'var(--text-muted)'; status.textContent = '処理中...';
+  try {
+    const res = await fetch(GAS_URL, { method:'POST', body:JSON.stringify({action:'close',therapist,date}), headers:{'Content-Type':'text/plain'} });
+    const json = await res.json();
+    if (json.success) {
+      status.style.color = 'var(--success)'; status.textContent = '締め完了！';
+      const r = document.getElementById('closeResult');
+      const t = document.getElementById('closeResultText');
+      r.style.display = 'block';
+      t.innerHTML = `
+        <div class="reward-row"><span style="color:var(--text-muted)">担当</span><span>${therapist}</span></div>
+        <div class="reward-row"><span style="color:var(--text-muted)">本日売上</span><span>¥${json.todaySales.toLocaleString()}</span></div>
+        <div class="reward-row"><span style="color:var(--text-muted)">施術人数</span><span>${json.todayCount}人</span></div>
+        <div class="reward-row total"><span style="color:var(--gold)">売上バック</span><span style="color:var(--gold);font-weight:700;">¥${json.salesBack.toLocaleString()}</span></div>
+      `;
+    } else { throw new Error(json.error); }
+  } catch(e) {
+    status.style.color = 'var(--danger)'; status.textContent = 'エラー: ' + e.message;
+  }
+}
+
+async function updatePayment() {
+  const therapist = document.getElementById('payTherapist').value;
+  const date = document.getElementById('payDate').value;
+  const transport = parseInt(document.getElementById('transport').value) || 0;
+  const carryover = parseInt(document.getElementById('carryover').value) || 0;
+  if (!therapist || !date) { alert('セラピストと日付を選択してください'); return; }
+  const status = document.getElementById('payStatus');
+  status.style.color = 'var(--text-muted)'; status.textContent = '処理中...';
+  try {
+    const res = await fetch(GAS_URL, { method:'POST', body:JSON.stringify({action:'pay',therapist,date,transport,carryover}), headers:{'Content-Type':'text/plain'} });
+    const json = await res.json();
+    if (json.success) {
+      status.style.color = 'var(--success)';
+      status.textContent = `支払済み！ 合計：¥${json.totalPay.toLocaleString()}`;
+    } else { throw new Error(json.error); }
+  } catch(e) {
+    status.style.color = 'var(--danger)'; status.textContent = 'エラー: ' + e.message;
+  }
+}
+
+async function loadUnpaid() {
+  const list = document.getElementById('unpaidList');
+  list.innerHTML = '<div style="color:var(--text-muted);text-align:center;font-size:0.85rem;">読み込み中...</div>';
+  try {
+    const res = await fetch(GAS_URL, { method:'POST', body:JSON.stringify({action:'getUnpaid'}), headers:{'Content-Type':'text/plain'} });
+    const json = await res.json();
+    if (json.success) {
+      if (json.unpaid.length === 0) {
+        list.innerHTML = '<div style="color:var(--text-muted);text-align:center;font-size:0.85rem;">未払いはありません</div>';
+        return;
+      }
+      list.innerHTML = json.unpaid.map(u => `
+        <div class="unpaid-item">
+          <div class="unpaid-header">
+            <span class="unpaid-name">${u.therapist}</span>
+            <span class="unpaid-date">${u.date}</span>
+          </div>
+          <div class="unpaid-detail">
+            コースバック：¥${(u.basicBack||0).toLocaleString()} ／
+            指名料：¥${(u.shimeiBack||0).toLocaleString()} ／
+            オプション：¥${(u.optionBack||0).toLocaleString()} ／
+            売上バック：¥${(u.salesBack||0).toLocaleString()}
+          </div>
+          <div class="unpaid-total">支払い合計：¥${(u.payTotal||0).toLocaleString()}</div>
+        </div>
+      `).join('');
+    } else { throw new Error(json.error); }
+  } catch(e) {
+    list.innerHTML = `<div style="color:var(--danger);font-size:0.85rem;">エラー: ${e.message}</div>`;
+  }
+}
+
+async function loadCustomers() {
+  const list = document.getElementById('customerList');
+  list.innerHTML = '<div style="color:var(--text-muted);text-align:center;font-size:0.85rem;">読み込み中...</div>';
+  try {
+    const res = await fetch(GAS_URL, { method:'POST', body:JSON.stringify({action:'getCustomers'}), headers:{'Content-Type':'text/plain'} });
+    const json = await res.json();
+    if (json.success) {
+      allCustomers = json.customers;
+      renderCustomers(allCustomers);
+    } else { throw new Error(json.error); }
+  } catch(e) {
+    list.innerHTML = `<div style="color:var(--danger);font-size:0.85rem;">エラー: ${e.message}</div>`;
+  }
+}
+
+function renderCustomers(customers) {
+  const list = document.getElementById('customerList');
+  if (customers.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-muted);text-align:center;font-size:0.85rem;">顧客データがありません</div>';
+    return;
+  }
+  list.innerHTML = customers.map(c => `
+    <div class="customer-item">
+      <div class="customer-name">${c.name || '名前未登録'}</div>
+      <div class="customer-phone">📞 ${c.phone}</div>
+      <div class="customer-detail">初回：${c.firstVisit} ／ 最終来店：${c.lastVisit} ／ 来店回数：${c.visitCount}回</div>
+    </div>
+  `).join('');
+}
+
+function filterCustomers() {
+  const q = document.getElementById('searchInput').value;
+  if (!q) { renderCustomers(allCustomers); return; }
+  const filtered = allCustomers.filter(c =>
+    (c.phone && c.phone.includes(q)) || (c.name && c.name.includes(q))
+  );
+  renderCustomers(filtered);
+}
+
+function copyText(id, btnId) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    btn.textContent = '✅ コピーしました';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 コピー'; btn.classList.remove('copied'); }, 2000);
+  });
+}
 </script>
 </body>
 </html>
