@@ -290,6 +290,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
         <label>割引額（円）</label>
         <input type="number" id="discountAmt" placeholder="0" oninput="calcTotal()">
       </div>
+      <div class="fg">
+        <label>カード払い金額（円）</label>
+        <input type="number" id="cardAmount" placeholder="0（現金のみなら0）">
+      </div>
     </div>
 
     <div class="total-bar">
@@ -373,6 +377,27 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   </div>
 
   <div class="card">
+    <div class="card-label">給与テンプレ生成</div>
+    <div class="close-grid">
+      <div class="fg">
+        <label>セラピスト</label>
+        <select id="templateTherapist"><option value="">選択</option></select>
+      </div>
+      <div class="fg">
+        <label>日付（例：5/15）</label>
+        <input type="text" id="templateDate" placeholder="例：5/15">
+      </div>
+    </div>
+    <button class="btn btn-gold" onclick="getSalaryTemplate()" style="touch-action:manipulation;">📝 給与テンプレを生成</button>
+    <div class="output-box" id="templateResult" style="display:none;margin-top:10px;">
+      <div class="output-tag">▼ コピーしてLINEに貼り付け</div>
+      <div class="output-text" id="templateText"></div>
+    </div>
+    <button class="btn-outline" id="templateCopyBtn" onclick="copyText('templateText','templateCopyBtn')" style="display:none;">📋 コピー</button>
+    <div class="status" id="templateStatus"></div>
+  </div>
+
+  <div class="card">
     <div class="card-label">未払い一覧</div>
     <button class="btn btn-gold" onclick="loadUnpaid()">🔄 読み込む</button>
     <div id="unpaidList" style="margin-top:12px;"></div>
@@ -438,7 +463,7 @@ async function loadTherapists() {
     if(res.success) {
       THERAPISTS = res.therapists;
       const names = Object.keys(THERAPISTS);
-      ['therapist','closeTherapist','payTherapist'].forEach(id => {
+      ['therapist','closeTherapist','payTherapist','templateTherapist'].forEach(id => {
         const el = document.getElementById(id);
         if(!el) return;
         const cur = el.value;
@@ -632,7 +657,8 @@ ${fullStr}
   document.getElementById('smsText').textContent = sms;
   document.getElementById('lineText').textContent = line;
 
-  lastData = {action:'record',date:dateStr,time:timeStr,therapist,course,coursePrice:cp,shimeiType:shimei,shimeiPrice:sp,options:selectedOpts,discount,discountAmount:da,total,customer,phone,duration};
+  const cardAmount = parseInt(document.getElementById('cardAmount').value)||0;
+  lastData = {action:'record',date:dateStr,time:timeStr,therapist,course,coursePrice:cp,shimeiType:shimei,shimeiPrice:sp,options:selectedOpts,discount,discountAmount:da,total,customer,phone,duration,cardAmount};
 
   ['rewardCard','recordCard','timetreeCard','smsCard','lineCard'].forEach(id=>document.getElementById(id).style.display='block');
   document.getElementById('rewardCard').scrollIntoView({behavior:'smooth'});
@@ -710,6 +736,22 @@ async function cancelBooking() {
   }catch(e){setStatus('cancelStatus','エラー: '+e.message,'err');}
 }
 
+async function getSalaryTemplate() {
+  const therapist = document.getElementById('templateTherapist').value;
+  const date = document.getElementById('templateDate').value.trim();
+  if(!therapist||!date){alert('セラピストと日付を入力してください');return;}
+  setStatus('templateStatus','生成中...','');
+  try{
+    const res = await post({action:'getSalaryTemplate', therapist, date});
+    if(res.success){
+      document.getElementById('templateText').textContent = res.template;
+      document.getElementById('templateResult').style.display='block';
+      document.getElementById('templateCopyBtn').style.display='block';
+      setStatus('templateStatus','','');
+    }else throw new Error(res.error);
+  }catch(e){setStatus('templateStatus','エラー: '+e.message,'err');}
+}
+
 async function loadTodayBookings() {
   const dateStr = document.getElementById('cancelDateText').value.trim();
   if(!dateStr){alert('日付を入力してください（例：5/15）');return;}
@@ -729,11 +771,28 @@ async function loadTodayBookings() {
             <span class="unpaid-date">${b.time}</span>
           </div>
           <div class="unpaid-detail">${b.course} ／ ${b.customer||'名前未登録'} ／ ¥${(b.total||0).toLocaleString()}</div>
-          <button onclick="cancelByRow(${b.row},'${b.therapist}','${b.time}')" style="background:linear-gradient(135deg,var(--red),#c62828);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.75rem;font-weight:700;margin-top:8px;padding:8px 14px;touch-action:manipulation;width:100%;">🗑️ キャンセル</button>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button onclick="changeCard(${b.row},${b.cardAmount||0})" style="background:linear-gradient(135deg,var(--blue),#2d6a9f);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;font-weight:700;padding:8px;touch-action:manipulation;flex:1;">💳 カード変更</button>
+            <button onclick="cancelByRow(${b.row},'${b.therapist}','${b.time}')" style="background:linear-gradient(135deg,var(--red),#c62828);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;font-weight:700;padding:8px;touch-action:manipulation;flex:1;">🗑️ キャンセル</button>
+          </div>
         </div>
       `).join('');
     }
   }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.8rem;">エラー: ${e.message}</div>`;}
+}
+
+async function changeCard(row, currentCard) {
+  const newCard = prompt(`カード払い金額を入力してください\n現在：¥${currentCard}`, currentCard);
+  if(newCard === null) return;
+  const cardAmount = parseInt(newCard) || 0;
+  try{
+    const res = await post({action:'updatePaymentMethod', row, cardAmount});
+    if(res.success){
+      alert(`カード金額を¥${cardAmount.toLocaleString()}に更新しました`);
+      const dateStr = document.getElementById('cancelDateText').value.trim();
+      if(dateStr) loadTodayBookings();
+    }
+  }catch(e){alert('エラー: '+e.message);}
 }
 
 async function cancelByRow(row, therapist, time) {
@@ -750,7 +809,10 @@ async function cancelByRow(row, therapist, time) {
           <div class="unpaid-card">
             <div class="unpaid-head"><span class="unpaid-name">${b.therapist}</span><span class="unpaid-date">${b.time}</span></div>
             <div class="unpaid-detail">${b.course} ／ ${b.customer||'名前未登録'} ／ ¥${(b.total||0).toLocaleString()}</div>
-            <button onclick="cancelByRow(${b.row},'${b.therapist}','${b.time}')" style="background:linear-gradient(135deg,var(--red),#c62828);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.75rem;font-weight:700;margin-top:8px;padding:8px 14px;touch-action:manipulation;width:100%;">🗑️ キャンセル</button>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+            <button onclick="changeCard(${b.row},${b.cardAmount||0})" style="background:linear-gradient(135deg,var(--blue),#2d6a9f);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;font-weight:700;padding:8px;touch-action:manipulation;flex:1;">💳 カード変更</button>
+            <button onclick="cancelByRow(${b.row},'${b.therapist}','${b.time}')" style="background:linear-gradient(135deg,var(--red),#c62828);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;font-weight:700;padding:8px;touch-action:manipulation;flex:1;">🗑️ キャンセル</button>
+          </div>
           </div>
         `).join('') : '<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">予約がありません</div>';
       }
