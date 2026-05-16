@@ -679,8 +679,11 @@ async function recordToSheet() {
 
 async function closeDay() {
   const therapist=document.getElementById('closeTherapist').value;
-  const date=document.getElementById('closeDate').value;
-  if(!therapist||!date){alert('セラピストと日付を選択してください');return;}
+  const dateRaw=document.getElementById('closeDate').value;
+  if(!therapist||!dateRaw){alert('セラピストと日付を選択してください');return;}
+  // 日付をM/D形式に変換して送る
+  const d=new Date(dateRaw);
+  const date=`${d.getMonth()+1}/${d.getDate()}`;
   setStatus('closeStatus','処理中...','');
   try{
     const res=await post({action:'close',therapist,date});
@@ -700,10 +703,12 @@ async function closeDay() {
 
 async function updatePayment() {
   const therapist=document.getElementById('payTherapist').value;
-  const date=document.getElementById('payDate').value;
+  const dateRaw=document.getElementById('payDate').value;
   const transport=parseInt(document.getElementById('transport').value)||0;
   const carryover=parseInt(document.getElementById('carryover').value)||0;
-  if(!therapist||!date){alert('セラピストと日付を選択してください');return;}
+  if(!therapist||!dateRaw){alert('セラピストと日付を選択してください');return;}
+  const d=new Date(dateRaw);
+  const date=`${d.getMonth()+1}/${d.getDate()}`;
   setStatus('payStatus','処理中...','');
   try{
     const res=await post({action:'pay',therapist,date,transport,carryover});
