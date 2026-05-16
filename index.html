@@ -172,10 +172,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <!-- ===== ダッシュボード ===== -->
 <div id="page-dash" class="page active">
   <div style="padding:16px 0 0;">
-    <div style="text-align:center;padding:10px 0 16px;">
+    <div style="text-align:center;padding:10px 0 12px;">
       <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:var(--gold);letter-spacing:.2em;">NEO LUXE</div>
       <div style="font-size:.62rem;color:var(--text3);letter-spacing:.15em;margin-top:2px;">MANAGEMENT SYSTEM</div>
     </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+      <input type="date" id="dashDate" style="flex:1;font-size:.78rem;" onchange="loadDashboard()">
+      <button onclick="resetDashDate()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;padding:8px 10px;touch-action:manipulation;white-space:nowrap;">今日</button>
+    </div>
+    <div style="text-align:center;font-size:.72rem;color:var(--gold);margin-bottom:8px;" id="dashDateLabel"></div>
     <div class="dash-grid">
       <div class="dash-card">
         <div class="dash-num" id="d-sales">—</div>
@@ -452,6 +457,9 @@ async function init() {
   const today = local.toISOString().slice(0,10);
   document.getElementById('closeDate').value = today;
   document.getElementById('payDate').value = today;
+  // dashDateを今日に設定
+  const dashDateEl = document.getElementById('dashDate');
+  if(dashDateEl) dashDateEl.value = local.toISOString().slice(0,10);
   await loadTherapists();
   onCourseChange();
   loadDashboard();
@@ -492,9 +500,23 @@ function showPage(id) {
 }
 
 // ダッシュボード
+function resetDashDate() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+  document.getElementById('dashDate').value = local.toISOString().slice(0,10);
+  loadDashboard();
+}
+
 async function loadDashboard() {
   try {
-    const res = await post({action:'getDashboard'});
+    const dateRaw = document.getElementById('dashDate').value;
+    let dateStr = '';
+    if (dateRaw) {
+      const parts = dateRaw.split('-');
+      dateStr = `${parseInt(parts[1])}/${parseInt(parts[2])}`;
+    }
+    document.getElementById('dashDateLabel').textContent = dateStr ? `${dateStr} の集計` : '';
+    const res = await post({action:'getDashboard', date: dateStr});
     if(res.success) {
       document.getElementById('d-sales').textContent = res.todaySales ? '¥'+res.todaySales.toLocaleString() : '¥0';
       document.getElementById('d-count').textContent = res.todayCount || 0;
