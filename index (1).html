@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>NEO LUXE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap');
+:root{
+  --gold:#c9a96e;--gold3:#a07840;
+  --bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--bg4:#1e1e1e;--bg5:#252525;
+  --text:#f0f0f0;--text2:#aaa;--text3:#666;
+  --border:#1f1f1f;--border2:#2a2a2a;
+  --green:#4caf7d;--green2:#2e7d52;
+  --blue:#5b9bd5;--red:#e57373;
+  --radius:14px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;display:flex;flex-direction:column;}
+
+.nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-item{flex:1;min-width:55px;padding:12px 4px 10px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.nav-item .icon{font-size:1.1rem;display:block;margin-bottom:2px;}
+.nav-item .label{font-size:.55rem;color:var(--text3);letter-spacing:.03em;}
+.nav-item.active .label{color:var(--gold);}
+.nav-item.active{border-bottom-color:var(--gold);}
+
+.scroll-area{flex:1;overflow-y:auto;padding:14px 14px 40px;-webkit-overflow-scrolling:touch;}
+.scroll-area::-webkit-scrollbar{width:3px;}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--border2);}
+
+.page{display:none;}
+.page.active{display:block;}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+.card-label{font-size:.6rem;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ダッシュボード */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.dash-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;}
+.dash-num{font-size:1.6rem;font-weight:700;color:var(--gold);line-height:1;}
+.dash-label{font-size:.6rem;color:var(--text3);margin-top:4px;}
+.therapist-rank{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.therapist-rank:last-child{border-bottom:none;}
+.rank-name{font-size:.82rem;}
+.rank-bar-wrap{flex:1;margin:0 8px;height:4px;background:var(--bg5);border-radius:2px;overflow:hidden;}
+.rank-bar{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold));border-radius:2px;transition:width .6s;}
+.rank-sales{font-size:.75rem;color:var(--gold);}
+
+/* フォーム */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.full{grid-column:1/-1;}
+.fg{min-width:0;overflow:hidden;}
+label{font-size:.65rem;color:var(--text3);letter-spacing:.05em;}
+input,select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:.82rem;padding:9px 8px;outline:none;transition:border-color .2s;width:100%;touch-action:manipulation;box-sizing:border-box;min-width:0;max-width:100%;display:block;}
+input:focus,select:focus{border-color:var(--gold);}
+input[type=datetime-local]{font-size:.72rem;}
+input[type=date]{font-size:.75rem;}
+select option{background:var(--bg3);}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+
+/* 顧客候補 */
+.autocomplete{position:relative;}
+.suggestions{position:absolute;top:100%;left:0;right:0;background:var(--bg4);border:1px solid var(--gold);border-radius:var(--radius-sm);z-index:100;max-height:180px;overflow-y:auto;}
+.suggestion-item{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.82rem;}
+.suggestion-item:last-child{border-bottom:none;}
+.suggestion-item:active{background:var(--bg5);}
+.suggestion-name{color:var(--text);}
+.suggestion-detail{font-size:.68rem;color:var(--text3);margin-top:2px;}
+
+.customer-banner{background:var(--bg3);border:1px solid var(--gold);border-radius:var(--radius-sm);padding:10px;margin-top:8px;display:none;}
+.banner-name{color:var(--gold);font-size:.88rem;font-weight:500;}
+.banner-detail{font-size:.7rem;color:var(--text2);margin-top:3px;line-height:1.6;}
+.history-item{font-size:.68rem;color:var(--text3);padding:3px 0;border-bottom:1px solid var(--border);}
+.history-item:last-child{border-bottom:none;}
+
+/* オプション */
+.opt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.opt-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text3);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.68rem;padding:7px 4px;text-align:center;transition:all .2s;user-select:none;line-height:1.5;touch-action:manipulation;}
+.opt-btn.active{background:var(--bg4);border-color:var(--gold);color:var(--gold);}
+.opt-price{font-size:.6rem;color:var(--gold);opacity:.75;}
+
+/* 合計 */
+.total-bar{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+.total-label{font-size:.72rem;color:var(--text3);}
+.total-val{font-size:1.1rem;color:var(--gold);font-weight:700;}
+
+/* ボタン */
+.btn{border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;padding:13px;transition:opacity .15s;width:100%;margin-top:8px;touch-action:manipulation;position:relative;z-index:1;}
+.btn:active{opacity:.8;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold3));color:var(--bg);}
+.btn-green{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;}
+.btn-blue{background:linear-gradient(135deg,var(--blue),#2d6a9f);color:#fff;}
+.btn-red{background:linear-gradient(135deg,var(--red),#c62828);color:#fff;}
+.btn-outline{background:var(--bg4);border:1px solid var(--border2);color:var(--text3);border-radius:var(--radius-sm);padding:9px;font-size:.75rem;cursor:pointer;font-family:'Noto Sans JP',sans-serif;width:100%;margin-top:6px;transition:all .2s;touch-action:manipulation;}
+.btn-outline:active,.btn-outline.copied{border-color:var(--green);color:var(--green);}
+
+/* 出力 */
+.output-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px;margin-top:10px;}
+.output-tag{font-size:.6rem;letter-spacing:.2em;color:var(--gold);margin-bottom:8px;}
+.output-text{color:var(--text);font-size:.8rem;line-height:1.85;white-space:pre-wrap;word-break:break-all;}
+
+/* 報酬明細 */
+.rw-row{display:flex;justify-content:space-between;padding:3px 0;font-size:.82rem;}
+.rw-row.indent{padding-left:12px;font-size:.75rem;}
+.rw-row.total{border-top:1px solid var(--border2);margin-top:8px;padding-top:8px;font-size:.95rem;}
+.rw-muted{color:var(--text3);}
+.rw-gold{color:var(--gold);font-weight:700;}
+.rw-note{font-size:.62rem;color:var(--text3);margin-top:6px;}
+
+/* ステータス */
+.status{text-align:center;font-size:.8rem;margin-top:8px;min-height:18px;}
+.status.ok{color:var(--green);}
+.status.err{color:var(--red);}
+
+/* 未払いカード */
+.unpaid-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px;margin-bottom:10px;}
+.unpaid-head{display:flex;justify-content:space-between;margin-bottom:6px;}
+.unpaid-name{color:var(--gold);font-weight:500;}
+.unpaid-date{color:var(--text3);font-size:.75rem;}
+.unpaid-detail{font-size:.75rem;color:var(--text3);line-height:1.7;}
+.unpaid-total{color:var(--text);font-size:.92rem;font-weight:500;margin-top:6px;}
+
+/* 顧客カード */
+.cust-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:13px;margin-bottom:8px;}
+.cust-name{color:var(--gold);font-size:.9rem;font-weight:500;}
+.cust-phone{color:var(--text);font-size:.85rem;margin-top:2px;}
+.cust-detail{color:var(--text3);font-size:.7rem;margin-top:4px;line-height:1.6;}
+
+/* 締めグリッド */
+.close-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px;}
+
+/* カレンダー */
+.cal-item{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;border-left:3px solid var(--gold);}
+.cal-time{font-size:.8rem;color:var(--gold);font-weight:500;}
+.cal-therapist{font-size:.95rem;font-weight:500;margin-top:2px;}
+.cal-detail{font-size:.75rem;color:var(--text3);margin-top:3px;}
+.cal-status{font-size:.65rem;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:4px;}
+.cal-status.未締め{background:rgba(201,169,110,.15);color:var(--gold);}
+.cal-status.締め済み{background:rgba(76,175,125,.15);color:var(--green);}
+
+/* 出勤表 */
+.schedule-item{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.schedule-name{color:var(--gold);font-weight:500;}
+.schedule-detail{font-size:.78rem;color:var(--text3);margin-top:2px;}
+
+@media(max-width:380px){
+  .form-grid,.close-grid{grid-template-columns:1fr;}
+  .opt-grid{grid-template-columns:repeat(2,1fr);}
+  .dash-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-item active" onclick="showPage('dash')"><span class="icon">📊</span><span class="label">ダッシュ</span></div>
+  <div class="nav-item" onclick="showPage('booking')"><span class="icon">📋</span><span class="label">予約入力</span></div>
+  <div class="nav-item" onclick="showPage('calendar')"><span class="icon">📅</span><span class="label">カレンダー</span></div>
+  <div class="nav-item" onclick="showPage('schedule')"><span class="icon">🗓️</span><span class="label">出勤表</span></div>
+  <div class="nav-item" onclick="showPage('payment')"><span class="icon">💰</span><span class="label">締め・支払</span></div>
+  <div class="nav-item" onclick="showPage('customer')"><span class="icon">👤</span><span class="label">顧客管理</span></div>
+</nav>
+
+<div class="scroll-area">
+
+<!-- ダッシュボード -->
+<div id="page-dash" class="page active">
+  <div style="padding:12px 0 0;">
+    <div style="text-align:center;padding:8px 0 12px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:var(--gold);letter-spacing:.2em;">NEO LUXE</div>
+      <div style="font-size:.6rem;color:var(--text3);letter-spacing:.15em;margin-top:2px;">MANAGEMENT SYSTEM</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+      <input type="date" id="dashDate" style="flex:1;font-size:.78rem;" onchange="loadDashboard()">
+      <button onclick="resetDashDate()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;padding:8px 10px;touch-action:manipulation;white-space:nowrap;">今日</button>
+    </div>
+    <div style="text-align:center;font-size:.7rem;color:var(--gold);margin-bottom:8px;" id="dashDateLabel"></div>
+    <div class="dash-grid">
+      <div class="dash-card"><div class="dash-num" id="d-sales">—</div><div class="dash-label">本日売上</div></div>
+      <div class="dash-card"><div class="dash-num" id="d-count">—</div><div class="dash-label">本日予約数</div></div>
+      <div class="dash-card"><div class="dash-num" id="d-reward" style="font-size:1.3rem;">—</div><div class="dash-label">本日報酬合計</div></div>
+      <div class="dash-card"><div class="dash-num" id="d-unpaid" style="color:var(--red);">—</div><div class="dash-label">未払い件数</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">セラピスト別売上</div>
+      <div id="d-therapists"><div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">読み込み中...</div></div>
+    </div>
+    <div style="padding:0 0 10px;">
+      <button onclick="loadDashboard()" style="background:linear-gradient(135deg,var(--gold),var(--gold3));border:none;border-radius:8px;color:var(--bg);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;font-weight:700;padding:13px;width:100%;touch-action:manipulation;">🔄 更新</button>
+    </div>
+  </div>
+</div>
+
+<!-- 予約入力 -->
+<div id="page-booking" class="page">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-label">予約情報</div>
+    <div class="form-grid">
+      <div class="fg">
+        <label>セラピスト</label>
+        <select id="therapist" onchange="onTherapistChange()"><option value="">選択</option></select>
+      </div>
+      <div class="fg">
+        <label>指名種別</label>
+        <select id="shimei" onchange="onShimeiChange()">
+          <option value="フリー">フリー</option>
+          <option value="指名">指名</option>
+          <option value="本指名">本指名</option>
+        </select>
+      </div>
+      <div class="fg full">
+        <label>予約日時</label>
+        <input type="datetime-local" id="datetime">
+      </div>
+      <div class="fg">
+        <label>コース</label>
+        <select id="course" onchange="onCourseChange()">
+          <option value="スタンダード">スタンダード</option>
+          <option value="レオナール">レオナール</option>
+          <option value="アルミラージ">アルミラージ</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>コース時間</label>
+        <select id="duration" onchange="autoPrice()"><option value="60">60分</option></select>
+      </div>
+      <div class="fg full">
+        <label>部屋番号</label>
+        <input type="text" id="room" placeholder="例：503">
+      </div>
+      <div class="fg full autocomplete">
+        <label>電話番号</label>
+        <input type="tel" id="phone" placeholder="09012345678" oninput="onPhoneInput()" autocomplete="off">
+        <div class="suggestions" id="phoneSuggestions" style="display:none;"></div>
+        <div class="customer-banner" id="customerBanner"></div>
+      </div>
+      <div class="fg full autocomplete">
+        <label>お客様名</label>
+        <input type="text" id="customer" placeholder="例：カジ様" oninput="onNameInput()" autocomplete="off">
+        <div class="suggestions" id="nameSuggestions" style="display:none;"></div>
+      </div>
+      <div class="fg">
+        <label>コース料金（円）</label>
+        <input type="number" id="coursePrice" placeholder="10000" oninput="calcTotal()">
+      </div>
+      <div class="fg">
+        <label>指名料（円）</label>
+        <input type="number" id="shimeiPrice" placeholder="0" oninput="calcTotal()" readonly style="background:var(--bg4);color:var(--gold);">
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <label style="display:block;margin-bottom:8px;font-size:.65rem;color:var(--text3);">オプション（お客様料金/セラピストバック）</label>
+      <div class="opt-grid">
+        <div class="opt-btn" onclick="toggleOpt(this,'スタ増量',1500,1000)">スタ増量<br><span class="opt-price">¥1,500/¥1,000</span></div>
+        <div class="opt-btn" onclick="toggleOpt(this,'レオ増量',2000,1500)">レオ増量<br><span class="opt-price">¥2,000/¥1,500</span></div>
+        <div class="opt-btn" onclick="toggleOpt(this,'アル増量',2500,2000)">アル増量<br><span class="opt-price">¥2,500/¥2,000</span></div>
+        <div class="opt-btn" onclick="toggleOpt(this,'贅沢',3000,2000)">贅沢<br><span class="opt-price">¥3,000/¥2,000</span></div>
+        <div class="opt-btn" onclick="toggleOpt(this,'集中',1000,1000)">集中<br><span class="opt-price">¥1,000/¥1,000</span></div>
+        <div class="opt-btn" onclick="toggleOpt(this,'衣装',3000,2000)">衣装<br><span class="opt-price">¥3,000/¥2,000</span></div>
+        <div class="opt-btn" onclick="toggleOpt(this,'ヘッドスパ',1000,1000)">ヘッドスパ<br><span class="opt-price">¥1,000/¥1,000</span></div>
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:10px;">
+      <div class="fg">
+        <label>割引内容</label>
+        <input type="text" id="discount" placeholder="例：初回割引">
+      </div>
+      <div class="fg">
+        <label>割引額（円）</label>
+        <input type="number" id="discountAmt" placeholder="0" oninput="calcTotal()">
+      </div>
+      <div class="fg">
+        <label>カード払い（円）</label>
+        <input type="number" id="cardAmount" placeholder="0" oninput="onCardInput()">
+      </div>
+      <div class="fg">
+        <label id="cardTaxLabel" style="display:none;color:var(--gold);">税込後合計</label>
+        <div id="cardTaxInfo" style="display:none;font-size:.78rem;color:var(--gold);padding:9px 8px;background:var(--bg3);border-radius:8px;border:1px solid var(--gold);"></div>
+      </div>
+    </div>
+
+    <div class="total-bar">
+      <span class="total-label">お客様支払い合計</span>
+      <span class="total-val" id="totalPrice">¥0</span>
+    </div>
+    <button class="btn btn-gold" onclick="generate()">定型文を生成する</button>
+  </div>
+
+  <div class="card" id="rewardCard" style="display:none;">
+    <div class="card-label">報酬明細</div>
+    <div id="rewardText"></div>
+  </div>
+
+  <div class="card" id="recordCard" style="display:none;">
+    <div class="card-label">スプレッドシートに記録</div>
+    <button class="btn btn-green" id="recordBtn" onclick="recordToSheet()">📊 売上・報酬を記録する</button>
+    <div class="status" id="recordStatus"></div>
+  </div>
+
+  <div class="card" id="smsCard" style="display:none;">
+    <div class="card-label">お客様SMS</div>
+    <div class="output-box"><div class="output-tag">▼ コピーしてSMSに貼り付け</div><div class="output-text" id="smsText"></div></div>
+    <button class="btn-outline" id="smsCopyBtn" onclick="copyText('smsText','smsCopyBtn')">📋 コピー</button>
+  </div>
+
+  <div class="card" id="lineCard" style="display:none;">
+    <div class="card-label">セラピストLINE</div>
+    <div class="output-box"><div class="output-tag">▼ コピーしてLINEに貼り付け</div><div class="output-text" id="lineText"></div></div>
+    <button class="btn-outline" id="lineCopyBtn" onclick="copyText('lineText','lineCopyBtn')">📋 コピー</button>
+  </div>
+</div>
+
+<!-- カレンダー -->
+<div id="page-calendar" class="page">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-label">予約カレンダー</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input type="date" id="calDate" style="flex:1;font-size:.78rem;" onchange="loadCalendar()">
+      <button onclick="resetCalDate()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;padding:8px 10px;touch-action:manipulation;white-space:nowrap;">今日</button>
+    </div>
+    <div id="calendarList"><div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">日付を選択してください</div></div>
+  </div>
+</div>
+
+<!-- 出勤表 -->
+<div id="page-schedule" class="page">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-label">出勤表登録</div>
+    <div class="close-grid">
+      <div class="fg">
+        <label>日付</label>
+        <input type="date" id="scheduleDate">
+      </div>
+      <div class="fg">
+        <label>セラピスト</label>
+        <select id="scheduleTherapist"><option value="">選択</option></select>
+      </div>
+      <div class="fg">
+        <label>部屋番号</label>
+        <input type="text" id="scheduleRoom" placeholder="例：503">
+      </div>
+      <div class="fg">
+        <label>出勤開始</label>
+        <input type="time" id="scheduleStart">
+      </div>
+      <div class="fg">
+        <label>出勤終了</label>
+        <input type="time" id="scheduleEnd">
+      </div>
+    </div>
+    <button class="btn btn-gold" onclick="saveSchedule()" style="touch-action:manipulation;">💾 出勤情報を保存</button>
+    <div class="status" id="scheduleStatus"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">出勤確認</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input type="date" id="scheduleViewDate" style="flex:1;font-size:.78rem;" onchange="loadSchedule()">
+      <button onclick="resetScheduleDate()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;padding:8px 10px;touch-action:manipulation;white-space:nowrap;">今日</button>
+    </div>
+    <div id="scheduleList"><div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">日付を選択してください</div></div>
+  </div>
+</div>
+
+<!-- 締め・支払い -->
+<div id="page-payment" class="page">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-label">本日締め</div>
+    <div class="close-grid">
+      <div class="fg"><label>セラピスト</label><select id="closeTherapist"><option value="">選択</option></select></div>
+      <div class="fg"><label>日付</label><input type="date" id="closeDate"></div>
+    </div>
+    <button class="btn btn-blue" onclick="closeDay()" style="touch-action:manipulation;">🔒 締め・売上バック確定</button>
+    <div class="status" id="closeStatus"></div>
+    <div class="output-box" id="closeResult" style="display:none;margin-top:10px;"><div id="closeResultText" style="font-size:.82rem;line-height:1.8;"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">給与テンプレ生成</div>
+    <div class="close-grid">
+      <div class="fg"><label>セラピスト</label><select id="templateTherapist"><option value="">選択</option></select></div>
+      <div class="fg"><label>日付（例：5/15）</label><input type="text" id="templateDate" placeholder="例：5/15"></div>
+    </div>
+    <button class="btn btn-gold" onclick="getSalaryTemplate()" style="touch-action:manipulation;">📝 給与テンプレを生成</button>
+    <div class="output-box" id="templateResult" style="display:none;margin-top:10px;">
+      <div class="output-tag">▼ コピーしてLINEに貼り付け</div>
+      <div class="output-text" id="templateText"></div>
+    </div>
+    <button class="btn-outline" id="templateCopyBtn" onclick="copyText('templateText','templateCopyBtn')" style="display:none;">📋 コピー</button>
+    <div class="status" id="templateStatus"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">支払い処理</div>
+    <div class="close-grid">
+      <div class="fg"><label>セラピスト</label><select id="payTherapist"><option value="">選択</option></select></div>
+      <div class="fg"><label>日付</label><input type="date" id="payDate"></div>
+      <div class="fg"><label>交通費（円）</label><input type="number" id="transport" placeholder="0"></div>
+      <div class="fg"><label>繰越額（円）</label><input type="number" id="carryover" placeholder="0"></div>
+    </div>
+    <button class="btn btn-green" onclick="updatePayment()" style="touch-action:manipulation;">✅ 支払済みにする</button>
+    <div class="status" id="payStatus"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">未払い一覧</div>
+    <button class="btn btn-gold" onclick="loadUnpaid()" style="touch-action:manipulation;">🔄 読み込む</button>
+    <div id="unpaidList" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">予約キャンセル</div>
+    <div class="fg" style="margin-bottom:10px;">
+      <label>日付（例：5/15）</label>
+      <input type="text" id="cancelDateText" placeholder="例：5/15">
+    </div>
+    <button onclick="loadTodayBookings()" style="background:linear-gradient(135deg,var(--gold),var(--gold3));border:none;border-radius:8px;color:var(--bg);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.85rem;font-weight:700;padding:13px;width:100%;touch-action:manipulation;">📋 予約一覧を表示</button>
+    <div id="todayBookingList" style="margin-top:12px;"></div>
+    <div class="status" id="cancelStatus"></div>
+  </div>
+</div>
+
+<!-- 顧客管理 -->
+<div id="page-customer" class="page">
+  <div class="card" style="margin-top:14px;">
+    <div class="card-label">顧客検索</div>
+    <input type="text" id="searchInput" placeholder="電話番号またはお名前で検索" oninput="filterCustomers()" style="margin-bottom:10px;">
+    <button class="btn btn-gold" onclick="loadCustomers()" style="touch-action:manipulation;">🔄 顧客リストを読み込む</button>
+    <div id="customerList" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+</div><!-- /scroll-area -->
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwhoGzpOecoiMuQ0Zu-NgJW1APj2Z0opp1SQF0uuiF9TzlGyFsoYT6FPuQBq_DKPNaOBg/exec';
+const OB = {'スタ増量':1000,'レオ増量':1500,'アル増量':2000,'贅沢':2000,'集中':1000,'衣装':2000,'ヘッドスパ':1000};
+const COURSE_PRICE = {
+  'スタンダード':{'60':10000,'90':15000,'120':20000,'150':25000,'180':30000},
+  'レオナール':{'100':20000,'130':25000,'160':30000,'190':35000},
+  'アルミラージ':{'70':18000},
+};
+const COURSE_DURATIONS = {
+  'スタンダード':['60','90','120','150','180'],
+  'レオナール':['100','130','160','190'],
+  'アルミラージ':['70'],
+};
+
+let THERAPISTS = {};
+let selectedOpts = [];
+let lastData = null;
+let allCustomers = [];
+let phoneTimer = null, nameTimer = null;
+
+async function init() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+  const todayStr = local.toISOString().slice(0,10);
+  document.getElementById('datetime').value = local.toISOString().slice(0,16);
+  document.getElementById('dashDate').value = todayStr;
+  document.getElementById('calDate').value = todayStr;
+  document.getElementById('closeDate').value = todayStr;
+  document.getElementById('payDate').value = todayStr;
+  document.getElementById('scheduleDate').value = todayStr;
+  document.getElementById('scheduleViewDate').value = todayStr;
+  await loadTherapists();
+  onCourseChange();
+  loadDashboard();
+}
+
+async function loadTherapists() {
+  try {
+    const res = await post({action:'getTherapists'});
+    if(res.success) {
+      THERAPISTS = res.therapists;
+      const names = Object.keys(THERAPISTS);
+      ['therapist','closeTherapist','payTherapist','templateTherapist','scheduleTherapist'].forEach(id => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        const cur = el.value;
+        el.innerHTML = '<option value="">選択</option>';
+        names.forEach(n => {
+          const opt = document.createElement('option');
+          opt.value = n; opt.textContent = n;
+          el.appendChild(opt);
+        });
+        if(cur) el.value = cur;
+      });
+    }
+  } catch(e) { console.error(e); }
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const pages=['dash','booking','calendar','schedule','payment','customer'];
+  document.querySelectorAll('.nav-item')[pages.indexOf(id)].classList.add('active');
+  document.querySelector('.scroll-area').scrollTop = 0;
+}
+
+function resetDashDate() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+  document.getElementById('dashDate').value = local.toISOString().slice(0,10);
+  loadDashboard();
+}
+
+async function loadDashboard() {
+  try {
+    const dateRaw = document.getElementById('dashDate').value;
+    let dateStr = '';
+    if(dateRaw) {
+      const p = dateRaw.split('-');
+      dateStr = `${parseInt(p[1])}/${parseInt(p[2])}`;
+    }
+    document.getElementById('dashDateLabel').textContent = dateStr ? `${dateStr} の集計` : '';
+    const res = await post({action:'getDashboard', date:dateStr});
+    if(res.success) {
+      document.getElementById('d-sales').textContent = res.todaySales ? '¥'+res.todaySales.toLocaleString() : '¥0';
+      document.getElementById('d-count').textContent = res.todayCount || 0;
+      document.getElementById('d-reward').textContent = res.todayReward ? '¥'+res.todayReward.toLocaleString() : '¥0';
+      document.getElementById('d-unpaid').textContent = res.unpaidCount || 0;
+      const maxSales = res.therapistList.length ? res.therapistList[0].sales : 1;
+      document.getElementById('d-therapists').innerHTML = res.therapistList.length ? res.therapistList.map(t=>`
+        <div class="therapist-rank">
+          <span class="rank-name">${t.name}</span>
+          <div class="rank-bar-wrap"><div class="rank-bar" style="width:${Math.round(t.sales/maxSales*100)}%"></div></div>
+          <span class="rank-sales">¥${t.sales.toLocaleString()}</span>
+        </div>
+      `).join('') : '<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">予約がありません</div>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+// セラピスト選択で指名料と部屋番号を自動反映
+async function onTherapistChange() {
+  const therapist = document.getElementById('therapist').value;
+  const shimei = document.getElementById('shimei').value;
+  if(therapist && THERAPISTS[therapist]) {
+    updateShimeiPrice(therapist, shimei);
+  }
+  // 出勤表から部屋番号を取得
+  if(therapist) {
+    const dateRaw = document.getElementById('datetime').value;
+    if(dateRaw) {
+      const d = new Date(dateRaw);
+      const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+      try {
+        const res = await post({action:'getSchedule', date:dateStr});
+        if(res.success) {
+          const found = res.schedule.find(s => s.therapist === therapist);
+          if(found && found.room) {
+            document.getElementById('room').value = found.room;
+          }
+        }
+      } catch(e) {}
+    }
+  }
+  calcTotal();
+}
+
+function updateShimeiPrice(therapist, shimei) {
+  const t = THERAPISTS[therapist];
+  if(!t) return;
+  let price = 0;
+  if(shimei === 'フリー') price = t.free;
+  else if(shimei === '指名') price = t.shimei;
+  else if(shimei === '本指名') price = t.honshimei;
+  document.getElementById('shimeiPrice').value = price;
+  calcTotal();
+}
+
+function onShimeiChange() {
+  const therapist = document.getElementById('therapist').value;
+  const shimei = document.getElementById('shimei').value;
+  if(therapist && THERAPISTS[therapist]) updateShimeiPrice(therapist, shimei);
+}
+
+function onCourseChange() {
+  const course = document.getElementById('course').value;
+  const durSel = document.getElementById('duration');
+  const durations = COURSE_DURATIONS[course] || ['60'];
+  durSel.innerHTML = durations.map(d=>`<option value="${d}">${d}分</option>`).join('');
+  autoPrice();
+}
+
+function autoPrice() {
+  const course = document.getElementById('course').value;
+  const duration = document.getElementById('duration').value;
+  const price = (COURSE_PRICE[course]||{})[duration];
+  if(price) { document.getElementById('coursePrice').value = price; calcTotal(); }
+}
+
+function onCardInput() {
+  const cardAmount = parseInt(document.getElementById('cardAmount').value) || 0;
+  const label = document.getElementById('cardTaxLabel');
+  const info = document.getElementById('cardTaxInfo');
+  if(cardAmount > 0) {
+    const taxed = Math.ceil(cardAmount * 1.1);
+    const extra = taxed - cardAmount;
+    label.style.display = 'block';
+    info.style.display = 'block';
+    info.textContent = `¥${cardAmount.toLocaleString()} → 税込¥${taxed.toLocaleString()}（+¥${extra.toLocaleString()}）`;
+  } else {
+    label.style.display = 'none';
+    info.style.display = 'none';
+  }
+  calcTotal();
+}
+
+function toggleOpt(el, name, price, back) {
+  const idx = selectedOpts.findIndex(o=>o.name===name);
+  if(idx>=0){selectedOpts.splice(idx,1);el.classList.remove('active');}
+  else{selectedOpts.push({name,price,back});el.classList.add('active');}
+  calcTotal();
+}
+
+function calcTotal() {
+  const cp = parseInt(document.getElementById('coursePrice').value)||0;
+  const sp = parseInt(document.getElementById('shimeiPrice').value)||0;
+  const da = parseInt(document.getElementById('discountAmt').value)||0;
+  const ot = selectedOpts.reduce((s,o)=>s+o.price,0);
+  const cardAmount = parseInt(document.getElementById('cardAmount').value)||0;
+  // クレジット分は10%増し
+  const cashAmount = cp + sp + ot - da - cardAmount;
+  const cardTaxed = cardAmount > 0 ? Math.ceil(cardAmount * 1.1) : 0;
+  const t = cashAmount + cardTaxed;
+  document.getElementById('totalPrice').textContent = '¥'+t.toLocaleString();
+  return t;
+}
+
+// 電話番号入力
+function onPhoneInput() {
+  clearTimeout(phoneTimer);
+  const val = document.getElementById('phone').value;
+  const sugg = document.getElementById('phoneSuggestions');
+  if(val.length < 4) { sugg.style.display='none'; return; }
+  phoneTimer = setTimeout(async()=>{
+    const filtered = allCustomers.filter(c=>String(c.phone).includes(val));
+    if(filtered.length > 0) {
+      sugg.innerHTML = filtered.slice(0,5).map(c=>`
+        <div class="suggestion-item" onclick="selectCustomer('${c.phone}','${c.name}')">
+          <div class="suggestion-name">${c.name||'名前未登録'}</div>
+          <div class="suggestion-detail">${c.phone} ／ 来店${c.visitCount}回 ／ 最終：${c.lastVisit}</div>
+        </div>
+      `).join('');
+      sugg.style.display='block';
+    } else { sugg.style.display='none'; }
+    if(val.length >= 10) {
+      try {
+        const res = await post({action:'getCustomerByPhone', phone:val});
+        if(res.success && res.customer) showCustomerBanner(res.customer, res.history||[]);
+      } catch(e){}
+    }
+  }, 400);
+}
+
+// 名前からも候補表示
+function onNameInput() {
+  clearTimeout(nameTimer);
+  const val = document.getElementById('customer').value;
+  const sugg = document.getElementById('nameSuggestions');
+  if(val.length < 2) { sugg.style.display='none'; return; }
+  nameTimer = setTimeout(()=>{
+    const filtered = allCustomers.filter(c=>c.name && c.name.includes(val));
+    if(filtered.length > 0) {
+      sugg.innerHTML = filtered.slice(0,5).map(c=>`
+        <div class="suggestion-item" onclick="selectCustomer('${c.phone}','${c.name}')">
+          <div class="suggestion-name">${c.name}</div>
+          <div class="suggestion-detail">${c.phone} ／ 来店${c.visitCount}回</div>
+        </div>
+      `).join('');
+      sugg.style.display='block';
+    } else { sugg.style.display='none'; }
+  }, 300);
+}
+
+function selectCustomer(phone, name) {
+  document.getElementById('phone').value = phone;
+  document.getElementById('customer').value = name;
+  document.getElementById('phoneSuggestions').style.display='none';
+  document.getElementById('nameSuggestions').style.display='none';
+  post({action:'getCustomerByPhone', phone}).then(res=>{
+    if(res.success && res.customer) showCustomerBanner(res.customer, res.history||[]);
+  });
+}
+
+function showCustomerBanner(c, history) {
+  const b = document.getElementById('customerBanner');
+  const histHTML = history.length ? history.map(h=>`<div class="history-item">${h.date} ${h.therapist} ${h.course} ¥${(h.total||0).toLocaleString()}</div>`).join('') : '<div class="history-item">履歴なし</div>';
+  b.innerHTML = `<div class="banner-name">${c.name||'名前未登録'}</div><div class="banner-detail">📞 ${c.phone} ／ 来店${c.visitCount}回 ／ 初回：${c.firstVisit} ／ 最終：${c.lastVisit}</div><div style="margin-top:6px;">${histHTML}</div>`;
+  b.style.display='block';
+  document.getElementById('customer').value = c.name||'';
+}
+
+function generate() {
+  const therapist = document.getElementById('therapist').value;
+  const shimei = document.getElementById('shimei').value;
+  const dt = document.getElementById('datetime').value;
+  const course = document.getElementById('course').value;
+  const duration = document.getElementById('duration').value;
+  const room = document.getElementById('room').value;
+  const customer = document.getElementById('customer').value;
+  const phone = document.getElementById('phone').value;
+  const cp = parseInt(document.getElementById('coursePrice').value)||0;
+  const sp = parseInt(document.getElementById('shimeiPrice').value)||0;
+  const discount = document.getElementById('discount').value;
+  const da = parseInt(document.getElementById('discountAmt').value)||0;
+  const cardAmount = parseInt(document.getElementById('cardAmount').value)||0;
+  const total = calcTotal();
+
+  if(!therapist||!room||!dt){alert('セラピスト・部屋番号・日時は必須です');return;}
+
+  const d = new Date(dt);
+  const m=d.getMonth()+1,day=d.getDate(),h=d.getHours(),min=String(d.getMinutes()).padStart(2,'0');
+  const dateStr=`${m}/${day}`, timeStr=`${h}時${min}分`, fullStr=`${m}/${day}  ${h}:${min}`;
+
+  const t = THERAPISTS[therapist]||{sta:60,leo:55,alm:55,free:500,shimei:500,honshimei:1500};
+  let br = t.sta;
+  if(course==='レオナール') br=t.leo;
+  if(course==='アルミラージ') br=t.alm;
+  const bb = Math.floor(cp*br/100);
+  const sb = shimei==='フリー'?t.free:shimei==='指名'?t.shimei:t.honshimei;
+  const ob = selectedOpts.reduce((s,o)=>s+(OB[o.name]||0),0);
+  const rewardTotal = bb+sb+ob;
+
+  let optDetail = selectedOpts.length ? selectedOpts.map(o=>`<div class="rw-row indent"><span class="rw-muted">　${o.name}（¥${o.price.toLocaleString()}）</span><span>¥${(OB[o.name]||0).toLocaleString()}</span></div>`).join('') : '<div class="rw-row indent"><span class="rw-muted">　なし</span><span>¥0</span></div>';
+
+  document.getElementById('rewardText').innerHTML = `
+    <div class="rw-row"><span class="rw-muted">担当</span><span>${therapist}（${shimei}）</span></div>
+    <div class="rw-row"><span class="rw-muted">コース</span><span>${course}${duration}分</span></div>
+    <div class="rw-row"><span class="rw-muted">コース料金</span><span>¥${cp.toLocaleString()}</span></div>
+    <div class="rw-row"><span class="rw-muted">コースバック（${br}%）</span><span>¥${bb.toLocaleString()}</span></div>
+    <div class="rw-row"><span class="rw-muted">指名料バック</span><span>¥${sb.toLocaleString()}</span></div>
+    <div class="rw-row"><span class="rw-muted">オプションバック</span><span>¥${ob.toLocaleString()}</span></div>
+    ${optDetail}
+    <div class="rw-row total"><span class="rw-gold">本件報酬合計</span><span class="rw-gold">¥${rewardTotal.toLocaleString()}</span></div>
+    ${cardAmount>0?`<div class="rw-note">💳 カード¥${cardAmount.toLocaleString()} → 税込¥${Math.ceil(cardAmount*1.1).toLocaleString()}（セラピスト報酬に影響なし）</div>`:''}
+    <div class="rw-note">※売上バックは本日締め後に加算されます</div>
+  `;
+
+  const optNames = selectedOpts.map(o=>o.name).join('・');
+  const sms = `メンズエステ店の中からNEO LUXEをお選びいただき、\n誠に有難うございます。\n当店は【厳選されたセラピスト】のみが在籍している店舗でございます。\n自信を持ってご案内させていただきます。\nお客様にとって癒しのお時間になる事を心より願っております🌱\n【〒790-0878】\n【勝山アリストシード】\n松山市勝山町1丁目1-15\n時間:${fullStr}\nルーム:${room}\n上記のマンションに到着されましたらお手数をおかけしますが、\n以下のURLをタップしていただき、\n【電話】を押しご連絡をよろしくお願いいたします。\nhttps://estama.jp/shop/29585/`;
+  const line = `▫日付:${dateStr}\n▫担当セラピスト: ${therapist}${shimei==='フリー'?'':shimei}\n▫時間:${timeStr}\n▫コース:${course}${duration}\n▫オプション:${optNames}\n▫お名前:${customer}\n▫割引内容:${discount}\n▫お客様支払い合計:${total.toLocaleString()}`;
+
+  document.getElementById('smsText').textContent = sms;
+  document.getElementById('lineText').textContent = line;
+
+  lastData = {action:'record',date:dateStr,time:timeStr,therapist,course,coursePrice:cp,shimeiType:shimei,shimeiPrice:sp,options:selectedOpts,discount,discountAmount:da,total,customer,phone,duration,cardAmount};
+
+  ['rewardCard','recordCard','smsCard','lineCard'].forEach(id=>document.getElementById(id).style.display='block');
+  document.getElementById('rewardCard').scrollIntoView({behavior:'smooth'});
+}
+
+async function recordToSheet() {
+  if(!lastData){alert('先に定型文を生成してください');return;}
+  const btn=document.getElementById('recordBtn');
+  btn.disabled=true;btn.textContent='送信中...';
+  try{
+    const res=await post(lastData);
+    if(res.success){btn.textContent='✅ 記録完了！';setStatus('recordStatus','スプレッドシートに記録しました','ok');}
+    else throw new Error(res.error);
+  }catch(e){btn.textContent='📊 売上・報酬を記録する';setStatus('recordStatus','エラー: '+e.message,'err');}
+  btn.disabled=false;
+}
+
+// カレンダー
+function resetCalDate() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+  document.getElementById('calDate').value = local.toISOString().slice(0,10);
+  loadCalendar();
+}
+
+async function loadCalendar() {
+  const dateRaw = document.getElementById('calDate').value;
+  if(!dateRaw) return;
+  const p = dateRaw.split('-');
+  const dateStr = `${parseInt(p[1])}/${parseInt(p[2])}`;
+  const list = document.getElementById('calendarList');
+  list.innerHTML = '<div style="color:var(--text3);font-size:.8rem;text-align:center;">読み込み中...</div>';
+  try {
+    const res = await post({action:'getCalendar', date:dateStr});
+    if(res.success) {
+      if(res.bookings.length === 0) {
+        list.innerHTML = '<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">予約がありません</div>';
+        return;
+      }
+      list.innerHTML = res.bookings.map(b=>`
+        <div class="cal-item">
+          <div class="cal-time">${b.startTime} 〜 ${b.endTime}</div>
+          <div class="cal-therapist">${b.therapist}${b.room?` <span style="color:var(--text3);font-size:.78rem;">🚪${b.room}</span>`:''}</div>
+          <div class="cal-detail">${b.course} ／ ${b.customer||'名前未登録'} ／ ¥${(b.total||0).toLocaleString()}</div>
+          <span class="cal-status ${b.status}">${b.status}</span>
+        </div>
+      `).join('');
+    }
+  } catch(e) { list.innerHTML = `<div style="color:var(--red);font-size:.8rem;">エラー: ${e.message}</div>`; }
+}
+
+// 出勤表
+function resetScheduleDate() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+  document.getElementById('scheduleViewDate').value = local.toISOString().slice(0,10);
+  loadSchedule();
+}
+
+async function saveSchedule() {
+  const dateRaw = document.getElementById('scheduleDate').value;
+  const therapist = document.getElementById('scheduleTherapist').value;
+  const room = document.getElementById('scheduleRoom').value;
+  const startTime = document.getElementById('scheduleStart').value;
+  const endTime = document.getElementById('scheduleEnd').value;
+  if(!dateRaw||!therapist){alert('日付とセラピストは必須です');return;}
+  const p = dateRaw.split('-');
+  const dateStr = `${parseInt(p[1])}/${parseInt(p[2])}`;
+  setStatus('scheduleStatus','保存中...','');
+  try {
+    const res = await post({action:'saveSchedule', date:dateStr, therapist, room, startTime, endTime});
+    if(res.success) setStatus('scheduleStatus','保存完了！','ok');
+    else throw new Error(res.error);
+  } catch(e) { setStatus('scheduleStatus','エラー: '+e.message,'err'); }
+}
+
+async function loadSchedule() {
+  const dateRaw = document.getElementById('scheduleViewDate').value;
+  if(!dateRaw) return;
+  const p = dateRaw.split('-');
+  const dateStr = `${parseInt(p[1])}/${parseInt(p[2])}`;
+  const list = document.getElementById('scheduleList');
+  list.innerHTML = '<div style="color:var(--text3);font-size:.8rem;text-align:center;">読み込み中...</div>';
+  try {
+    const res = await post({action:'getSchedule', date:dateStr});
+    if(res.success) {
+      if(res.schedule.length === 0) {
+        list.innerHTML = '<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">出勤情報がありません</div>';
+        return;
+      }
+      list.innerHTML = res.schedule.map(s=>`
+        <div class="schedule-item">
+          <div>
+            <div class="schedule-name">${s.therapist}</div>
+            <div class="schedule-detail">🚪${s.room||'部屋未設定'} ／ ${s.startTime||''}〜${s.endTime||''}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch(e) { list.innerHTML = `<div style="color:var(--red);font-size:.8rem;">エラー: ${e.message}</div>`; }
+}
+
+async function closeDay() {
+  const therapist=document.getElementById('closeTherapist').value;
+  const dateRaw=document.getElementById('closeDate').value;
+  if(!therapist||!dateRaw){alert('セラピストと日付を選択してください');return;}
+  const p=dateRaw.split('-');
+  const date=`${parseInt(p[1])}/${parseInt(p[2])}`;
+  setStatus('closeStatus','処理中...','');
+  try{
+    const res=await post({action:'close',therapist,date});
+    if(res.success){
+      setStatus('closeStatus','締め完了！','ok');
+      const r=document.getElementById('closeResult');
+      r.style.display='block';
+      document.getElementById('closeResultText').innerHTML=`
+        <div class="rw-row"><span class="rw-muted">担当</span><span>${therapist}</span></div>
+        <div class="rw-row"><span class="rw-muted">本日売上</span><span>¥${res.todaySales.toLocaleString()}</span></div>
+        <div class="rw-row"><span class="rw-muted">施術人数</span><span>${res.todayCount}人</span></div>
+        <div class="rw-row total"><span class="rw-gold">売上バック</span><span class="rw-gold">¥${res.salesBack.toLocaleString()}</span></div>
+      `;
+    }else throw new Error(res.error);
+  }catch(e){setStatus('closeStatus','エラー: '+e.message,'err');}
+}
+
+async function getSalaryTemplate() {
+  const therapist=document.getElementById('templateTherapist').value;
+  const date=document.getElementById('templateDate').value.trim();
+  if(!therapist||!date){alert('セラピストと日付を入力してください');return;}
+  setStatus('templateStatus','生成中...','');
+  try{
+    const res=await post({action:'getSalaryTemplate',therapist,date});
+    if(res.success){
+      document.getElementById('templateText').textContent=res.template;
+      document.getElementById('templateResult').style.display='block';
+      document.getElementById('templateCopyBtn').style.display='block';
+      setStatus('templateStatus','','');
+    }else throw new Error(res.error);
+  }catch(e){setStatus('templateStatus','エラー: '+e.message,'err');}
+}
+
+async function updatePayment() {
+  const therapist=document.getElementById('payTherapist').value;
+  const dateRaw=document.getElementById('payDate').value;
+  const transport=parseInt(document.getElementById('transport').value)||0;
+  const carryover=parseInt(document.getElementById('carryover').value)||0;
+  if(!therapist||!dateRaw){alert('セラピストと日付を選択してください');return;}
+  const p=dateRaw.split('-');
+  const date=`${parseInt(p[1])}/${parseInt(p[2])}`;
+  setStatus('payStatus','処理中...','');
+  try{
+    const res=await post({action:'pay',therapist,date,transport,carryover});
+    if(res.success)setStatus('payStatus',`支払済み！ 合計：¥${res.totalPay.toLocaleString()}`,'ok');
+    else throw new Error(res.error);
+  }catch(e){setStatus('payStatus','エラー: '+e.message,'err');}
+}
+
+async function loadUnpaid() {
+  const list=document.getElementById('unpaidList');
+  list.innerHTML='<div style="color:var(--text3);font-size:.8rem;text-align:center;">読み込み中...</div>';
+  try{
+    const res=await post({action:'getUnpaid'});
+    if(res.success){
+      list.innerHTML=res.unpaid.length?res.unpaid.map(u=>`
+        <div class="unpaid-card">
+          <div class="unpaid-head"><span class="unpaid-name">${u.therapist}</span><span class="unpaid-date">${u.date}</span></div>
+          <div class="unpaid-detail">コースバック：¥${(u.basicBack||0).toLocaleString()} ／ 指名：¥${(u.shimeiBack||0).toLocaleString()} ／ オプション：¥${(u.optionBack||0).toLocaleString()} ／ 売上バック：¥${(u.salesBack||0).toLocaleString()}</div>
+          <div class="unpaid-total">支払い合計：¥${(u.payTotal||0).toLocaleString()}</div>
+        </div>
+      `).join(''):'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">未払いはありません</div>';
+    }
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.8rem;">エラー: ${e.message}</div>`;}
+}
+
+async function loadTodayBookings() {
+  const dateStr = document.getElementById('cancelDateText').value.trim();
+  if(!dateStr){alert('日付を入力してください（例：5/15）');return;}
+  const list = document.getElementById('todayBookingList');
+  list.innerHTML = '<div style="color:var(--text3);font-size:.8rem;text-align:center;">読み込み中...</div>';
+  try{
+    const res = await post({action:'getTodayBookings', date:dateStr});
+    if(res.success){
+      list.innerHTML=res.bookings.length?res.bookings.map(b=>`
+        <div class="unpaid-card">
+          <div class="unpaid-head"><span class="unpaid-name">${b.therapist}</span><span class="unpaid-date">${b.time}</span></div>
+          <div class="unpaid-detail">${b.course} ／ ${b.customer||'名前未登録'} ／ ¥${(b.total||0).toLocaleString()}</div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button onclick="changeCard(${b.row},${b.cardAmount||0})" style="background:linear-gradient(135deg,var(--blue),#2d6a9f);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;font-weight:700;padding:8px;touch-action:manipulation;flex:1;">💳 カード変更</button>
+            <button onclick="cancelByRow(${b.row},'${b.therapist}','${b.time}')" style="background:linear-gradient(135deg,var(--red),#c62828);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.72rem;font-weight:700;padding:8px;touch-action:manipulation;flex:1;">🗑️ キャンセル</button>
+          </div>
+        </div>
+      `).join(''):'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">予約がありません</div>';
+    }
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.8rem;">エラー: ${e.message}</div>`;}
+}
+
+async function changeCard(row, currentCard) {
+  const newCard = prompt(`カード払い金額を入力してください\n現在：¥${currentCard}`, currentCard);
+  if(newCard === null) return;
+  const cardAmount = parseInt(newCard) || 0;
+  try{
+    const res = await post({action:'updatePaymentMethod', row, cardAmount});
+    if(res.success){ alert(`カード金額を¥${cardAmount.toLocaleString()}に更新しました`); loadTodayBookings(); }
+  }catch(e){alert('エラー: '+e.message);}
+}
+
+async function cancelByRow(row, therapist, time) {
+  if(!confirm(`${therapist} ${time} の予約をキャンセルしますか？`)){return;}
+  setStatus('cancelStatus','処理中...','');
+  try{
+    const res = await post({action:'cancelByRow', row});
+    if(res.success){ setStatus('cancelStatus','キャンセル完了！','ok'); loadTodayBookings(); }
+    else throw new Error(res.error);
+  }catch(e){setStatus('cancelStatus','エラー: '+e.message,'err');}
+}
+
+async function loadCustomers() {
+  const list=document.getElementById('customerList');
+  list.innerHTML='<div style="color:var(--text3);font-size:.8rem;text-align:center;">読み込み中...</div>';
+  try{
+    const res=await post({action:'getCustomers'});
+    if(res.success){allCustomers=res.customers;renderCustomers(allCustomers);}
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.8rem;">エラー: ${e.message}</div>`;}
+}
+
+function renderCustomers(list) {
+  const el=document.getElementById('customerList');
+  el.innerHTML=list.length?list.map(c=>`
+    <div class="cust-card">
+      <div class="cust-name">${c.name||'名前未登録'}</div>
+      <div class="cust-phone">📞 ${c.phone}</div>
+      <div class="cust-detail">初回：${c.firstVisit} ／ 最終来店：${c.lastVisit} ／ 来店回数：${c.visitCount}回</div>
+    </div>
+  `).join(''):'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">顧客データがありません</div>';
+}
+
+function filterCustomers() {
+  const q=document.getElementById('searchInput').value;
+  if(!q){renderCustomers(allCustomers);return;}
+  renderCustomers(allCustomers.filter(c=>(c.phone&&String(c.phone).includes(q))||(c.name&&c.name.includes(q))));
+}
+
+function copyText(id,btnId) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{
+    const btn=document.getElementById(btnId);
+    btn.textContent='✅ コピーしました';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='📋 コピー';btn.classList.remove('copied');},2000);
+  });
+}
+
+function setStatus(id,msg,type) {
+  const el=document.getElementById(id);
+  el.textContent=msg;el.className='status'+(type?' '+type:'');
+}
+
+async function post(data) {
+  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'text/plain'}});
+  return res.json();
+}
+
+init();
+</script>
+</body>
+</html>
