@@ -123,10 +123,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .schedule-col-header.sun{color:var(--red);}
 .schedule-col-header.sat{color:var(--blue);}
 .schedule-col-header.today-col{color:var(--gold);}
-.schedule-cell{background:var(--bg2);min-height:70px;padding:3px;}
-.schedule-entry{background:var(--bg4);border-radius:3px;padding:2px 3px;margin-bottom:2px;font-size:.52rem;border-left:2px solid var(--gold);}
-.schedule-entry-name{color:var(--gold);font-weight:700;}
-.schedule-entry-info{color:var(--text3);}
+.schedule-cell{background:var(--bg2);min-height:30px;padding:2px;}
+.schedule-entry{background:var(--bg4);border-radius:3px;padding:2px 3px;margin-bottom:1px;font-size:.48rem;border-left:2px solid var(--gold);line-height:1.3;}
+.schedule-entry-name{color:var(--gold);font-weight:700;display:block;}
+.schedule-entry-info{color:var(--text3);display:block;}
 .schedule-count{font-size:.6rem;color:var(--text3);text-align:center;padding:4px 0;background:var(--bg3);border-top:1px solid var(--border);}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:500;display:none;overflow-y:auto;}
 .modal-overlay.open{display:block;}
@@ -753,7 +753,7 @@ async function renderScheduleWeek(){
   days.forEach((d,i)=>{
     const dateStr=dateStrs[i];const daySchedule=scheduleData.filter(s=>s.date===dateStr);
     const cell=document.createElement('div');cell.className='schedule-cell';
-    cell.innerHTML=daySchedule.map(s=>`<div class="schedule-entry"><div class="schedule-entry-name">${s.therapist}</div><div class="schedule-entry-info">🚪${s.room||'未設定'} ${s.startTime||''}-${s.endTime||''}</div></div>`).join('');
+    cell.innerHTML=daySchedule.map(s=>`<div class="schedule-entry"><span class="schedule-entry-name">${s.therapist}</span><span class="schedule-entry-info">🚪${s.room||'?'} ${s.startTime||''}</span></div>`).join('');
     table.appendChild(cell);
     const countCell=document.createElement('div');countCell.className='schedule-count';
     countCell.textContent=daySchedule.length>0?`${daySchedule.length}人`:'';countRow.appendChild(countCell);
