@@ -144,6 +144,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 .balance-amount{font-size:1.1rem;font-weight:700;margin-top:4px;}
 .balance-amount.positive{color:var(--green);}
 .balance-amount.negative{color:var(--red);}
+.sched-item{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.sched-name{color:var(--gold);font-weight:500;font-size:.88rem;}
+.sched-detail{font-size:.75rem;color:var(--text3);margin-top:3px;}
+.sched-edit-btn{background:linear-gradient(135deg,var(--blue),#2d6a9f);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.68rem;font-weight:700;padding:7px 10px;touch-action:manipulation;white-space:nowrap;}
 .cust-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;margin-bottom:7px;}
 .cust-name{color:var(--gold);font-size:.88rem;font-weight:500;}
 .cust-phone{color:var(--text);font-size:.82rem;margin-top:2px;}
@@ -277,9 +281,24 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <!-- 出勤表 -->
 <div id="page-schedule" class="page">
   <div class="card" style="margin-top:12px;">
-    <div class="card-label">出勤登録</div>
+    <div class="cal-header">
+      <button class="cal-nav-btn" onclick="changeSchedDay(-1)">◀</button>
+      <span class="cal-month" id="schedDayLabel"></span>
+      <button class="cal-nav-btn" onclick="changeSchedDay(1)">▶</button>
+    </div>
+    <button onclick="resetSchedDay()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.7rem;padding:7px 14px;touch-action:manipulation;margin-bottom:10px;width:100%;">今日</button>
+    <div id="scheduleList"><div style="color:var(--text3);font-size:.78rem;text-align:center;padding:10px;">読み込み中...</div></div>
+    <button class="btn btn-gold" onclick="openAddSchedule()" style="margin-top:8px;">➕ 出勤を追加</button>
+  </div>
+</div>
+
+<!-- 出勤登録モーダル -->
+<div class="modal-overlay" id="scheduleModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeScheduleModal()">✕</button>
+    <div class="modal-title" id="scheduleModalTitle">出勤登録</div>
+    <input type="hidden" id="scheduleEditDate">
     <div class="close-grid">
-      <div class="fg"><label>日付</label><input type="date" id="scheduleDate"></div>
       <div class="fg"><label>セラピスト</label><select id="scheduleTherapist"><option value="">選択</option></select></div>
       <div class="fg"><label>部屋番号</label><input type="text" id="scheduleRoom" placeholder="例：503"></div>
       <div class="fg"><label>出勤開始</label><input type="time" id="scheduleStart"></div>
@@ -287,17 +306,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     </div>
     <button class="btn btn-gold" onclick="saveSchedule()">💾 保存</button>
     <div class="status" id="scheduleStatus"></div>
-  </div>
-  <div class="card">
-    <div class="cal-header">
-      <button class="cal-nav-btn" onclick="changeSchedWeek(-1)">◀</button>
-      <span class="cal-month" id="schedWeekLabel"></span>
-      <button class="cal-nav-btn" onclick="changeSchedWeek(1)">▶</button>
-    </div>
-    <div class="schedule-week">
-      <div class="schedule-table" id="scheduleTable"></div>
-    </div>
-    <div id="scheduleCountRow" style="display:grid;grid-template-columns:repeat(7,minmax(45px,1fr));gap:1px;background:var(--border);margin-top:1px;border-radius:0 0 8px 8px;overflow:hidden;min-width:320px;"></div>
   </div>
 </div>
 
@@ -432,7 +440,7 @@ async function init(){
   onCourseChange();
   loadDashboard();
   renderCalendar();
-  renderScheduleWeek();
+  renderScheduleDay();
   loadCustomersSilent();
 }
 
@@ -730,44 +738,90 @@ async function saveEditBooking(){
 }
 
 // 出勤表
-function changeSchedWeek(diff){schedWeekStart=new Date(schedWeekStart);schedWeekStart.setDate(schedWeekStart.getDate()+diff*7);renderScheduleWeek();}
+let schedCurrentDay = new Date();
 
-async function renderScheduleWeek(){
-  const days=[];for(let i=0;i<7;i++){const d=new Date(schedWeekStart);d.setDate(d.getDate()+i);days.push(d);}
-  const dateStrs=days.map(d=>`${d.getMonth()+1}/${d.getDate()}`);
-  const now=new Date();
-  document.getElementById('schedWeekLabel').textContent=`${days[0].getMonth()+1}/${days[0].getDate()} 〜 ${days[6].getMonth()+1}/${days[6].getDate()}`;
-  let scheduleData=[];
-  try{const res=await post({action:'getSchedule',dates:dateStrs});if(res.success)scheduleData=res.schedule;}catch(e){}
-  const table=document.getElementById('scheduleTable');const countRow=document.getElementById('scheduleCountRow');
-  table.innerHTML='';countRow.innerHTML='';
-  const DOW=['日','月','火','水','木','金','土'];
-  days.forEach((d,i)=>{
-    const isToday=d.toDateString()===now.toDateString();const dow=d.getDay();
-    const cls=dow===0?'sun':dow===6?'sat':'';
-    const header=document.createElement('div');
-    header.className=`schedule-col-header ${cls}${isToday?' today-col':''}`;
-    header.innerHTML=`${DOW[dow]}<br><span style="font-size:.72rem;">${d.getDate()}</span>`;
-    table.appendChild(header);
-  });
-  days.forEach((d,i)=>{
-    const dateStr=dateStrs[i];const daySchedule=scheduleData.filter(s=>s.date===dateStr);
-    const cell=document.createElement('div');cell.className='schedule-cell';
-    cell.innerHTML=daySchedule.map(s=>`<div class="schedule-entry"><span class="schedule-entry-name">${s.therapist}</span><span class="schedule-entry-info">🚪${s.room||'?'} ${s.startTime||''}</span></div>`).join('');
-    table.appendChild(cell);
-    const countCell=document.createElement('div');countCell.className='schedule-count';
-    countCell.textContent=daySchedule.length>0?`${daySchedule.length}人`:'';countRow.appendChild(countCell);
-  });
+function changeSchedDay(diff){
+  schedCurrentDay=new Date(schedCurrentDay);
+  schedCurrentDay.setDate(schedCurrentDay.getDate()+diff);
+  renderScheduleDay();
 }
 
+function resetSchedDay(){
+  schedCurrentDay=new Date();
+  renderScheduleDay();
+}
+
+async function renderScheduleDay(){
+  const now=new Date();
+  const d=schedCurrentDay;
+  const dateStr=`${d.getMonth()+1}/${d.getDate()}`;
+  const DOW=['日','月','火','水','木','金','土'];
+  const isToday=d.toDateString()===now.toDateString();
+  document.getElementById('schedDayLabel').textContent=`${d.getMonth()+1}/${d.getDate()}（${DOW[d.getDay()]}）${isToday?'　今日':''}`;
+  const list=document.getElementById('scheduleList');
+  list.innerHTML='<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">読み込み中...</div>';
+  try{
+    const res=await post({action:'getSchedule',dates:[dateStr]});
+    if(res.success){
+      const daySchedule=res.schedule.filter(s=>s.date===dateStr);
+      if(daySchedule.length===0){
+        list.innerHTML='<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:10px;">出勤情報がありません</div>';
+        return;
+      }
+      list.innerHTML=`<div style="font-size:.7rem;color:var(--text3);margin-bottom:8px;">出勤 ${daySchedule.length}人</div>`+daySchedule.map(s=>`
+        <div class="sched-item">
+          <div>
+            <div class="sched-name">${s.therapist}</div>
+            <div class="sched-detail">🚪${s.room||'未設定'} ／ ${s.startTime||''}〜${s.endTime||''}</div>
+          </div>
+          <button class="sched-edit-btn" onclick="openEditSchedule('${dateStr}','${s.therapist}','${s.room||''}','${s.startTime||''}','${s.endTime||''}')">✏️ 編集</button>
+        </div>
+      `).join('');
+    }
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.78rem;">エラー: ${e.message}</div>`;}
+}
+
+function openAddSchedule(){
+  const d=schedCurrentDay;
+  const dateStr=`${d.getMonth()+1}/${d.getDate()}`;
+  document.getElementById('scheduleModalTitle').textContent=`出勤登録 ${dateStr}`;
+  document.getElementById('scheduleEditDate').value=dateStr;
+  document.getElementById('scheduleTherapist').value='';
+  document.getElementById('scheduleRoom').value='';
+  document.getElementById('scheduleStart').value='';
+  document.getElementById('scheduleEnd').value='';
+  setStatus('scheduleStatus','','');
+  document.getElementById('scheduleModal').classList.add('open');
+}
+
+function openEditSchedule(date,therapist,room,start,end){
+  document.getElementById('scheduleModalTitle').textContent=`出勤編集 ${therapist}`;
+  document.getElementById('scheduleEditDate').value=date;
+  document.getElementById('scheduleTherapist').value=therapist;
+  document.getElementById('scheduleRoom').value=room;
+  document.getElementById('scheduleStart').value=start;
+  document.getElementById('scheduleEnd').value=end;
+  setStatus('scheduleStatus','','');
+  document.getElementById('scheduleModal').classList.add('open');
+}
+
+function closeScheduleModal(){document.getElementById('scheduleModal').classList.remove('open');}
+
 async function saveSchedule(){
-  const dateRaw=document.getElementById('scheduleDate').value;const therapist=document.getElementById('scheduleTherapist').value;
-  const room=document.getElementById('scheduleRoom').value;const startTime=document.getElementById('scheduleStart').value;const endTime=document.getElementById('scheduleEnd').value;
-  if(!dateRaw||!therapist){alert('日付とセラピストは必須です');return;}
-  const p=dateRaw.split('-');const dateStr=`${parseInt(p[1])}/${parseInt(p[2])}`;
+  const dateStr=document.getElementById('scheduleEditDate').value;
+  const therapist=document.getElementById('scheduleTherapist').value;
+  const room=document.getElementById('scheduleRoom').value;
+  const startTime=document.getElementById('scheduleStart').value;
+  const endTime=document.getElementById('scheduleEnd').value;
+  if(!dateStr||!therapist){alert('セラピストは必須です');return;}
   setStatus('scheduleStatus','保存中...','');
-  try{const res=await post({action:'saveSchedule',date:dateStr,therapist,room,startTime,endTime});if(res.success){setStatus('scheduleStatus','保存完了！','ok');renderScheduleWeek();}else throw new Error(res.error);}
-  catch(e){setStatus('scheduleStatus','エラー: '+e.message,'err');}
+  try{
+    const res=await post({action:'saveSchedule',date:dateStr,therapist,room,startTime,endTime});
+    if(res.success){
+      setStatus('scheduleStatus','保存完了！','ok');
+      setTimeout(()=>{closeScheduleModal();renderScheduleDay();},800);
+    }else throw new Error(res.error);
+  }catch(e){setStatus('scheduleStatus','エラー: '+e.message,'err');}
 }
 
 async function closeDay(){
