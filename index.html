@@ -347,8 +347,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
   <div class="card">
     <div class="card-label">残高管理</div>
-    <button class="btn btn-blue" onclick="loadBalance()">💳 残高一覧を読み込む</button>
-    <div id="balanceList" style="margin-top:10px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <select id="balanceTherapist" style="flex:1;"><option value="">全員</option></select>
+      <button onclick="loadBalanceHistory()" style="background:linear-gradient(135deg,var(--blue),#2d6a9f);border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.75rem;font-weight:700;padding:8px 12px;touch-action:manipulation;white-space:nowrap;">📋 履歴</button>
+      <button onclick="loadBalance()" style="background:linear-gradient(135deg,var(--gold),var(--gold3));border:none;border-radius:8px;color:var(--bg);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.75rem;font-weight:700;padding:8px 12px;touch-action:manipulation;white-space:nowrap;">💳 残高</button>
+    </div>
+    <div id="balanceList" style="margin-top:8px;"></div>
   </div>
 
   <div class="card">
@@ -464,7 +468,7 @@ async function loadTherapists(){
     if(res.success){
       THERAPISTS=res.therapists;
       const names=Object.keys(THERAPISTS);
-      ['therapist','closeTherapist','payTherapist','templateTherapist','scheduleTherapist'].forEach(id=>{
+      ['therapist','closeTherapist','payTherapist','templateTherapist','scheduleTherapist','balanceTherapist'].forEach(id=>{
         const el=document.getElementById(id);if(!el)return;
         const cur=el.value;
         el.innerHTML='<option value="">選択</option>';
@@ -927,6 +931,61 @@ async function executePayFromList(){
       setTimeout(()=>{loadUnpaid();loadBalance();},1000);
     }else throw new Error(res.error);
   }catch(e){setStatus('payModalStatus','エラー: '+e.message,'err');}
+}
+
+async function loadBalanceHistory(){
+  const therapist=document.getElementById('balanceTherapist').value;
+  const list=document.getElementById('balanceList');
+  list.innerHTML='<div style="color:var(--text3);font-size:.78rem;text-align:center;">読み込み中...</div>';
+  try{
+    const res=await post({action:'getBalanceHistory',therapist});
+    if(res.success){
+      if(res.history.length===0){list.innerHTML='<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">履歴がありません</div>';return;}
+      list.innerHTML=res.history.map(h=>`
+        <div class="balance-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <span class="balance-name">${h.therapist}</span>
+              <span style="font-size:.68rem;color:var(--text3);margin-left:6px;">${h.date}</span>
+            </div>
+            <div style="display:flex;gap:5px;">
+              <button onclick="editBalance(${h.row},${h.diff})" style="background:linear-gradient(135deg,var(--blue),#2d6a9f);border:none;border-radius:5px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.62rem;font-weight:700;padding:5px 8px;touch-action:manipulation;">✏️</button>
+              <button onclick="deleteBalance(${h.row})" style="background:linear-gradient(135deg,var(--red),#c62828);border:none;border-radius:5px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.62rem;font-weight:700;padding:5px 8px;touch-action:manipulation;">🗑️</button>
+            </div>
+          </div>
+          <div style="font-size:.72rem;color:var(--text3);margin-top:4px;">
+            報酬¥${(h.totalUnpaid||0).toLocaleString()} ／ 支払¥${(h.payAmount||0).toLocaleString()} ／ 交通費¥${(h.transport||0).toLocaleString()}
+          </div>
+          <div class="balance-amount ${h.diff>=0?'positive':'negative'}" style="font-size:.88rem;margin-top:3px;">
+            ${h.diff>=0?'前払い':'未払い残高'} ¥${Math.abs(h.diff||0).toLocaleString()}
+          </div>
+        </div>
+      `).join('');
+    }
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.78rem;">エラー: ${e.message}</div>`;}
+}
+
+async function editBalance(row, currentDiff){
+  const input=prompt(`差額を修正してください
+プラス=前払い、マイナス=未払い残高
+現在：${currentDiff}`, currentDiff);
+  if(input===null)return;
+  const newDiff=parseInt(input);
+  if(isNaN(newDiff)){alert('数字を入力してください');return;}
+  try{
+    const res=await post({action:'updateBalance',row,diff:newDiff});
+    if(res.success){alert('修正しました');loadBalanceHistory();}
+    else throw new Error(res.error);
+  }catch(e){alert('エラー: '+e.message);}
+}
+
+async function deleteBalance(row){
+  if(!confirm('この残高履歴を削除しますか？'))return;
+  try{
+    const res=await post({action:'deleteBalance',row});
+    if(res.success){alert('削除しました');loadBalanceHistory();}
+    else throw new Error(res.error);
+  }catch(e){alert('エラー: '+e.message);}
 }
 
 async function loadBalance(){
