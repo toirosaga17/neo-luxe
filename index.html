@@ -236,7 +236,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <div class="fg">
         <label>カード払い（円）</label>
         <input type="number" id="cardAmount" placeholder="0" oninput="onCardInput()">
-        <div id="cardTaxInfo" style="display:none;font-size:.7rem;color:var(--gold);padding:5px 0;"></div>
+
       </div>
       <div class="fg">
         <label>立替金額（円）</label>
@@ -552,10 +552,6 @@ function autoPrice(){
 }
 
 function onCardInput(){
-  const cardAmount=parseInt(document.getElementById('cardAmount').value)||0;
-  const info=document.getElementById('cardTaxInfo');
-  if(cardAmount>0){const taxed=Math.round(cardAmount*1.1);info.style.display='block';info.textContent=`💳 ¥${cardAmount.toLocaleString()} → 税込¥${taxed.toLocaleString()}（+¥${(taxed-cardAmount).toLocaleString()}）`;}
-  else info.style.display='none';
   calcTotal();
 }
 
@@ -571,8 +567,7 @@ function calcTotal(){
   const sp=parseInt(document.getElementById('shimeiPrice').value)||0;
   const da=parseInt(document.getElementById('discountAmt').value)||0;
   const ot=selectedOpts.reduce((s,o)=>s+o.price,0);
-  const ca=parseInt(document.getElementById('cardAmount').value)||0;
-  const t=(cp+sp+ot-da-ca)+Math.round(ca*1.1);
+  const t=cp+sp+ot-da;
   document.getElementById('totalPrice').textContent='¥'+t.toLocaleString();return t;
 }
 
@@ -630,7 +625,7 @@ function generate(){
   const optNames=selectedOpts.map(o=>o.name).join('・');
   const sms=`メンズエステ店の中からNEO LUXEをお選びいただき、\n誠に有難うございます。\n当店は【厳選されたセラピスト】のみが在籍している店舗でございます。\n自信を持ってご案内させていただきます。\nお客様にとって癒しのお時間になる事を心より願っております🌱\n【〒790-0878】\n【勝山アリストシード】\n松山市勝山町1丁目1-15\n時間:${fullStr}\nルーム:${room}\n上記のマンションに到着されましたらお手数をおかけしますが、\n以下のURLをタップしていただき、\n【電話】を押しご連絡をよろしくお願いいたします。\nhttps://estama.jp/shop/29585/`;
   let lineExtra='';
-  if(ca>0)lineExtra+=`\n▫クレジット決済：¥${Math.round(ca*1.1).toLocaleString()}`;
+  if(ca>0)lineExtra+=`\n▫クレジット決済：¥${ca.toLocaleString()}`;
   const line=`▫日付:${dateStr}\n▫担当セラピスト: ${therapist}${shimei==='フリー'?'':shimei}\n▫時間:${timeStr}\n▫コース:${course}${duration}\n▫オプション:${optNames||'なし'}\n▫お名前:${customer}\n▫割引内容:${discount||'なし'}${lineExtra}\n▫お客様支払い合計:¥${total.toLocaleString()}`;
   document.getElementById('smsText').textContent=sms;document.getElementById('lineText').textContent=line;
   const adv=parseInt(document.getElementById('advance').value)||0;
@@ -768,8 +763,7 @@ function calcEditTotal(){
   const sp=parseInt(document.getElementById('editShimeiPrice').value)||0;
   const da=parseInt(document.getElementById('editDiscountAmt').value)||0;
   const ot=editSelectedOpts.reduce((s,o)=>s+o.price,0);
-  const ca=parseInt(document.getElementById('editCardAmount').value)||0;
-  const t=(cp+sp+ot-da-ca)+Math.round(ca*1.1);
+  const t=cp+sp+ot-da;
   document.getElementById('editTotalPrice').textContent='¥'+t.toLocaleString();return t;
 }
 
