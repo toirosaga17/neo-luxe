@@ -684,7 +684,7 @@ function selectCalDay(dateStr,d){
   const header=document.getElementById('calDetailHeader');const list=document.getElementById('calDetailList');
   header.style.display='block';header.textContent=`${calMonth+1}/${d}（${DOW[new Date(calYear,calMonth,d).getDay()]}）の予約`;
   const dayBookings=calBookings.filter(b=>b.date===dateStr);
-  list.innerHTML=dayBookings.length?dayBookings.map(b=>`<div class="booking-item${b.status==='締め済み'?' done':''}"><div class="booking-time">${b.startTime} 〜 ${b.endTime}</div><div class="booking-therapist">${b.therapist}${b.room?` <span style="font-size:.72rem;color:var(--text3);">🚪${b.room}</span>`:''}</div><div class="booking-detail">${b.course} ／ ${b.customer||'名前未登録'} ／ ¥${(b.total||0).toLocaleString()}</div><div class="booking-actions"><button class="booking-btn edit" onclick="openEditModal(${b.row},'${b.therapist}','${b.course}','${b.startTime}','${b.date}')">✏️ 変更</button><button class="booking-btn cancel" onclick="cancelFromCal(${b.row},'${b.therapist}','${b.startTime}')">🗑️ キャンセル</button></div></div>`).join(''): '<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">予約がありません</div>';
+  list.innerHTML=dayBookings.length?dayBookings.map(b=>`<div class="booking-item${b.status==='締め済み'?' done':''}"><div class="booking-time">${b.startTime} 〜 ${b.endTime}</div><div class="booking-therapist">${b.therapist}${b.room?` <span style="font-size:.72rem;color:var(--text3);">🚪${b.room}</span>`:''}</div><div class="booking-detail">${b.course} ／ ${b.customer||'名前未登録'} ／ ¥${(b.total||0).toLocaleString()}</div><div class="booking-actions"><button class="booking-btn edit" onclick="openEditModal(${b.row},'${b.therapist}','${b.course}','${b.startTime}','${b.date}','${b.shimeiType||''}','${b.options||''}',${b.discountAmount||0},${b.cardAmount||0})">✏️ 変更</button><button class="booking-btn cancel" onclick="cancelFromCal(${b.row},'${b.therapist}','${b.startTime}')">🗑️ キャンセル</button></div></div>`).join(''): '<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">予約がありません</div>';
 }
 
 function changeCalMonth(diff){calMonth+=diff;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendar();document.getElementById('calDetailHeader').style.display='none';document.getElementById('calDetailList').innerHTML='';}
@@ -695,13 +695,48 @@ async function cancelFromCal(row,therapist,time){
   catch(e){alert('エラー: '+e.message);}
 }
 
-function openEditModal(row,therapist,courseStr,time,currentDate){
-  document.getElementById('editRow').value=row;document.getElementById('editTherapist').value=therapist;
-  document.getElementById('editDate').value=currentDate||'';  const courseMatch=courseStr.match(/^(スタンダード|レオナール|アルミラージ)/);const durMatch=courseStr.match(/(\d+)分/);
-  const course=courseMatch?courseMatch[1]:'スタンダード';const dur=durMatch?durMatch[1]:'60';
-  document.getElementById('editCourse').value=course;onEditCourseChange(dur);
-  editSelectedOpts=[];document.querySelectorAll('[id^="eo-"]').forEach(el=>el.classList.remove('active'));
-  document.getElementById('editModal').classList.add('open');calcEditTotal();
+function openEditModal(row,therapist,courseStr,time,currentDate,shimei,optNames,discount,card){
+  document.getElementById('editRow').value=row;
+  document.getElementById('editTherapist').value=therapist;
+  document.getElementById('editDate').value=currentDate||'';
+
+  // コース・時間
+  const courseMatch=courseStr.match(/^(スタンダード|レオナール|アルミラージ)/);
+  const durMatch=courseStr.match(/(\d+)分/);
+  const course=courseMatch?courseMatch[1]:'スタンダード';
+  const dur=durMatch?durMatch[1]:'60';
+  document.getElementById('editCourse').value=course;
+  onEditCourseChange(dur);
+
+  // 指名種別・指名料
+  if(shimei){
+    document.getElementById('editShimei').value=shimei;
+    onEditShimeiChange();
+  }
+
+  // 割引額・カード
+  if(discount!==undefined)document.getElementById('editDiscountAmt').value=discount||0;
+  if(card!==undefined)document.getElementById('editCardAmount').value=card||0;
+
+  // オプション初期化
+  editSelectedOpts=[];
+  document.querySelectorAll('[id^="eo-"]').forEach(el=>el.classList.remove('active'));
+
+  // 既存オプションを反映
+  if(optNames){
+    const opts=optNames.split('・');
+    const optData={'スタ増量':{price:1500,back:1000},'レオ増量':{price:2000,back:1500},'アル増量':{price:2500,back:2000},'贅沢':{price:3000,back:2000},'集中':{price:1000,back:1000},'衣装':{price:3000,back:2000},'ヘッドスパ':{price:1000,back:1000}};
+    opts.forEach(name=>{
+      if(optData[name]){
+        editSelectedOpts.push({name,price:optData[name].price,back:optData[name].back});
+        const el=document.getElementById('eo-'+name);
+        if(el)el.classList.add('active');
+      }
+    });
+  }
+
+  document.getElementById('editModal').classList.add('open');
+  calcEditTotal();
 }
 
 function closeEditModal(){document.getElementById('editModal').classList.remove('open');}
