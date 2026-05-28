@@ -360,6 +360,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   </div>
 
   <div class="card">
+    <div class="card-label">予約キャンセル</div>
+    <div class="fg" style="margin-bottom:8px;"><label>日付（例：5/15）</label><input type="text" id="cancelDateText" placeholder="例：5/15"></div>
+    <button onclick="loadTodayBookings()" style="background:linear-gradient(135deg,var(--gold),var(--gold3));border:none;border-radius:8px;color:var(--bg);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.82rem;font-weight:700;padding:12px;width:100%;touch-action:manipulation;">📋 予約一覧を表示</button>
+    <div id="todayBookingList" style="margin-top:10px;"></div>
+    <div class="status" id="cancelStatus"></div>
+  </div>
+
+  <div class="card">
     <div class="card-label">支払い処理（手動）</div>
     <div class="close-grid">
       <div class="fg"><label>セラピスト</label><select id="payTherapist"><option value="">選択</option></select></div>
@@ -708,6 +716,59 @@ function selectCalDay(dateStr,d){
 }
 
 function changeCalMonth(diff){calMonth+=diff;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendar();document.getElementById('calDetailHeader').style.display='none';document.getElementById('calDetailList').innerHTML='';}
+
+async function changeAdvance(row, currentAdvance) {
+  const newAdvance = prompt('立替金額を入力してください\n現在：¥'+currentAdvance, currentAdvance);
+  if(newAdvance===null) return;
+  try{
+    const res=await post({action:'updateAdvance',row,advance:parseInt(newAdvance)||0});
+    if(res.success){alert('更新しました');loadTodayBookings();}
+  }catch(e){alert('エラー: '+e.message);}
+}
+
+async function loadTodayBookings() {
+  const dateStr = document.getElementById('cancelDateText') ? document.getElementById('cancelDateText').value.trim() : '';
+  if(!dateStr){alert('日付を入力してください（例：5/15）');return;}
+  const list = document.getElementById('todayBookingList');
+  if(!list) return;
+  list.innerHTML = '<div style="color:var(--text3);font-size:.8rem;text-align:center;">読み込み中...</div>';
+  try{
+    const res = await post({action:'getTodayBookings', date:dateStr});
+    if(res.success){
+      list.innerHTML=res.bookings.length?res.bookings.map(b=>`
+        <div class="unpaid-card">
+          <div class="unpaid-head"><span class="unpaid-name">${b.therapist}</span><span class="unpaid-date">${b.time}</span></div>
+          <div class="unpaid-detail">${b.course} ／ ${b.customer||'名前未登録'} ／ ¥${(b.total||0).toLocaleString()}</div>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+            <button onclick="changeCard(${b.row},${b.cardAmount||0})" style="background:linear-gradient(135deg,var(--blue),#2d6a9f);border:none;border-radius:5px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.65rem;font-weight:700;padding:7px;touch-action:manipulation;flex:1;">💳 カード</button>
+            <button onclick="changeAdvance(${b.row},${b.advance||0})" style="background:linear-gradient(135deg,#7b5ea7,#5b3e8a);border:none;border-radius:5px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.65rem;font-weight:700;padding:7px;touch-action:manipulation;flex:1;">💴 立替</button>
+            <button onclick="cancelByRowFromList(${b.row},'${b.therapist}','${b.time}')" style="background:linear-gradient(135deg,var(--red),#c62828);border:none;border-radius:5px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.65rem;font-weight:700;padding:7px;touch-action:manipulation;flex:1;">🗑️ キャンセル</button>
+          </div>
+        </div>
+      `).join(''):'<div style="color:var(--text3);font-size:.8rem;text-align:center;padding:10px;">予約がありません</div>';
+    }
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.8rem;">エラー: ${e.message}</div>`;}
+}
+
+async function cancelByRowFromList(row, therapist, time) {
+  if(!confirm(therapist+' '+time+' の予約をキャンセルしますか？')){return;}
+  setStatus('cancelStatus','処理中...','');
+  try{
+    const res = await post({action:'cancelByRow', row});
+    if(res.success){ setStatus('cancelStatus','キャンセル完了！','ok'); loadTodayBookings(); }
+    else throw new Error(res.error);
+  }catch(e){setStatus('cancelStatus','エラー: '+e.message,'err');}
+}
+
+async function changeCard(row, currentCard) {
+  const newCard = prompt('カード払い金額を入力してください\n現在：¥'+currentCard, currentCard);
+  if(newCard === null) return;
+  const cardAmount = parseInt(newCard) || 0;
+  try{
+    const res = await post({action:'updatePaymentMethod', row, cardAmount});
+    if(res.success){ alert('カード金額を¥'+cardAmount.toLocaleString()+'に更新しました'); loadTodayBookings(); }
+  }catch(e){alert('エラー: '+e.message);}
+}
 
 async function cancelFromCal(row,therapist,time){
   if(!confirm(`${therapist} ${time} の予約をキャンセルしますか？`))return;
