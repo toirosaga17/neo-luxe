@@ -1150,4 +1150,180 @@ async function post(data){const res=await fetch(GAS_URL,{method:'POST',body:JSON
 init();
 </script>
 </body>
+</html>let currentPayData = null;
+
+function openPayModal(therapist, totalUnpaid, basicBackTotal, shimeiBackTotal, optionBackTotal, salesBackTotal, prevBalance){
+  currentPayTherapist = therapist;
+  currentPayData = { totalUnpaid, basicBackTotal, shimeiBackTotal, optionBackTotal, salesBackTotal, prevBalance };
+  document.getElementById('payModalTitle').textContent = therapist + 'さんへの支払い';
+
+  // 報酬明細
+  let breakdownHTML = '<div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:.78rem;">';
+  breakdownHTML += '<div class="rw-row"><span class="rw-muted">コースバック</span><span>¥' + basicBackTotal.toLocaleString() + '</span></div>';
+  breakdownHTML += '<div class="rw-row"><span class="rw-muted">指名バック</span><span>¥' + shimeiBackTotal.toLocaleString() + '</span></div>';
+  if(optionBackTotal > 0) breakdownHTML += '<div class="rw-row"><span class="rw-muted">オプションバック</span><span>¥' + optionBackTotal.toLocaleString() + '</span></div>';
+  if(salesBackTotal > 0) breakdownHTML += '<div class="rw-row"><span class="rw-muted">売上バック</span><span>¥' + salesBackTotal.toLocaleString() + '</span></div>';
+  if(prevBalance < 0) breakdownHTML += '<div class="rw-row"><span style="color:var(--red);">前回不足</span><span style="color:var(--red);">+¥' + Math.abs(prevBalance).toLocaleString() + '</span></div>';
+  if(prevBalance > 0) breakdownHTML += '<div class="rw-row"><span style="color:var(--green);">前回過払い</span><span style="color:var(--green);">-¥' + prevBalance.toLocaleString() + '</span></div>';
+  breakdownHTML += '<div class="rw-row total"><span class="rw-gold">報酬小計</span><span class="rw-gold">¥' + totalUnpaid.toLocaleString() + '</span></div>';
+  breakdownHTML += '</div>';
+
+  document.getElementById('payModalBreakdown').innerHTML = breakdownHTML;
+  document.getElementById('payModalTransport').value = 0;
+  // 初期支払い金額 = 報酬 + 前回残高(不足→加算、過払い→減算)
+  const autoTotal = totalUnpaid - prevBalance;
+  document.getElementById('payModalAmount').value = autoTotal;
+  document.getElementById('payModalDiff').innerHTML = '<span style="color:var(--green);">✅ 過不足なし</span>';
+  setStatus('payModalStatus','','');
+  document.getElementById('payModalTemplate').style.display='none';
+  document.getElementById('payModal').classList.add('open');
+}
+
+function calcPayModalTotal() {
+  const transport = parseInt(document.getElementById('payModalTransport').value)||0;
+  if(!currentPayData) return;
+  // 自動計算：報酬 + 交通費 + 前回残高反映
+  const autoTotal = currentPayData.totalUnpaid - currentPayData.prevBalance + transport;
+  document.getElementById('payModalAmount').value = autoTotal;
+  calcPayModalDiff();
+}
+
+function calcPayModalDiff() {
+  const payAmount = parseInt(document.getElementById('payModalAmount').value)||0;
+  const transport = parseInt(document.getElementById('payModalTransport').value)||0;
+  if(!currentPayData) return;
+  // 差額 = 支払い金額 - (報酬 + 交通費)
+  // 前回残高は既に支払い金額に反映済みなので差額計算には含めない
+  const totalDue = currentPayData.totalUnpaid + transport;
+  const diff = payAmount - totalDue;
+  const diffEl = document.getElementById('payModalDiff');
+  if(diff === 0) diffEl.innerHTML = '<span style="color:var(--green);">✅ 過不足なし</span>';
+  else if(diff > 0) diffEl.innerHTML = '<span style="color:var(--blue);">前払い：¥' + diff.toLocaleString() + '（次回差引）</span>';
+  else diffEl.innerHTML = '<span style="color:var(--red);">不足：¥' + Math.abs(diff).toLocaleString() + '（次回加算）</span>';
+}
+
+function closePayModal(){document.getElementById('payModal').classList.remove('open');currentPayTherapist=null;}
+
+async function executePayFromList(){
+  const payAmount=parseInt(document.getElementById('payModalAmount').value)||0;
+  const transport=parseInt(document.getElementById('payModalTransport').value)||0;
+  if(!currentPayTherapist||payAmount===0){alert('金額を入力してください');return;}
+  setStatus('payModalStatus','処理中...','');
+  try{
+    const res=await post({action:'payFromList',therapist:currentPayTherapist,payAmount,transport});
+    if(res.success){
+      const diff=res.diff;
+      const msg=diff>0?`前払い¥${diff.toLocaleString()}を記録しました`:diff<0?`未払い残高¥${Math.abs(diff).toLocaleString()}を記録しました`:'支払い完了！';
+      setStatus('payModalStatus',`支払済み！ ${msg}`,'ok');
+      if(res.template){
+        document.getElementById('payModalTemplateText').textContent=res.template;
+        document.getElementById('payModalTemplate').style.display='block';
+      }
+      setTimeout(()=>{loadUnpaid();loadBalance();},1000);
+    }else throw new Error(res.error);
+  }catch(e){setStatus('payModalStatus','エラー: '+e.message,'err');}
+}
+
+async function loadBalanceHistory(){
+  const therapist=document.getElementById('balanceTherapist').value;
+  const list=document.getElementById('balanceList');
+  list.innerHTML='<div style="color:var(--text3);font-size:.78rem;text-align:center;">読み込み中...</div>';
+  try{
+    const res=await post({action:'getBalanceHistory',therapist});
+    if(res.success){
+      if(res.history.length===0){list.innerHTML='<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">履歴がありません</div>';return;}
+      list.innerHTML=res.history.map(h=>`
+        <div class="balance-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <span class="balance-name">${h.therapist}</span>
+              <span style="font-size:.68rem;color:var(--text3);margin-left:6px;">${h.date}</span>
+            </div>
+            <div style="display:flex;gap:5px;">
+              <button onclick="editBalance(${h.row},${h.diff})" style="background:linear-gradient(135deg,var(--blue),#2d6a9f);border:none;border-radius:5px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.62rem;font-weight:700;padding:5px 8px;touch-action:manipulation;">✏️</button>
+              <button onclick="deleteBalance(${h.row})" style="background:linear-gradient(135deg,var(--red),#c62828);border:none;border-radius:5px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.62rem;font-weight:700;padding:5px 8px;touch-action:manipulation;">🗑️</button>
+            </div>
+          </div>
+          <div style="font-size:.72rem;color:var(--text3);margin-top:4px;">
+            報酬¥${(h.totalUnpaid||0).toLocaleString()} ／ 支払¥${(h.payAmount||0).toLocaleString()} ／ 交通費¥${(h.transport||0).toLocaleString()}
+          </div>
+          <div class="balance-amount ${h.diff>=0?'positive':'negative'}" style="font-size:.88rem;margin-top:3px;">
+            ${h.diff>=0?'前払い':'未払い残高'} ¥${Math.abs(h.diff||0).toLocaleString()}
+          </div>
+        </div>
+      `).join('');
+    }
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.78rem;">エラー: ${e.message}</div>`;}
+}
+
+async function editBalance(row, currentDiff){
+  const input=prompt(`差額を修正してください
+プラス=前払い、マイナス=未払い残高
+現在：${currentDiff}`, currentDiff);
+  if(input===null)return;
+  const newDiff=parseInt(input);
+  if(isNaN(newDiff)){alert('数字を入力してください');return;}
+  try{
+    const res=await post({action:'updateBalance',row,diff:newDiff});
+    if(res.success){alert('修正しました');loadBalanceHistory();}
+    else throw new Error(res.error);
+  }catch(e){alert('エラー: '+e.message);}
+}
+
+async function deleteBalance(row){
+  if(!confirm('この残高履歴を削除しますか？'))return;
+  try{
+    const res=await post({action:'deleteBalance',row});
+    if(res.success){alert('削除しました');loadBalanceHistory();}
+    else throw new Error(res.error);
+  }catch(e){alert('エラー: '+e.message);}
+}
+
+async function loadBalance(){
+  const list=document.getElementById('balanceList');list.innerHTML='<div style="color:var(--text3);font-size:.78rem;text-align:center;">読み込み中...</div>';
+  try{
+    const res=await post({action:'getBalance'});
+    if(res.success){
+      list.innerHTML=res.balances.length?res.balances.map(b=>`
+        <div class="balance-card">
+          <div class="balance-name">${b.therapist}</div>
+          ${b.balance!==0?`<div class="balance-amount ${b.balance>0?'positive':'negative'}">${b.balance>0?'前払い残高':'未払い残高'} ¥${Math.abs(b.balance).toLocaleString()}</div>`:''}
+          ${b.currentUnpaid>0?`<div style="font-size:.75rem;color:var(--text3);margin-top:3px;">現在の未払い：¥${b.currentUnpaid.toLocaleString()}</div>`:''}
+        </div>
+      `).join(''): '<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">残高データがありません</div>';
+    }
+  }catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.78rem;">エラー: ${e.message}</div>`;}
+}
+
+async function loadCustomers(){
+  const list=document.getElementById('customerList');list.innerHTML='<div style="color:var(--text3);font-size:.78rem;text-align:center;">読み込み中...</div>';
+  try{const res=await post({action:'getCustomers'});if(res.success){allCustomers=res.customers;renderCustomers(allCustomers);}}
+  catch(e){list.innerHTML=`<div style="color:var(--red);font-size:.78rem;">エラー: ${e.message}</div>`;}
+}
+
+function renderCustomers(list){
+  const el=document.getElementById('customerList');
+  el.innerHTML=list.length?list.map(c=>`<div class="cust-card"><div class="cust-name">${c.name||'名前未登録'}</div><div class="cust-phone">📞 ${c.phone}</div><div class="cust-detail">初回：${c.firstVisit} ／ 最終来店：${c.lastVisit} ／ 来店回数：${c.visitCount}回</div></div>`).join(''): '<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">顧客データがありません</div>';
+}
+
+function filterCustomers(){
+  const q=document.getElementById('searchInput').value;
+  if(!q){renderCustomers(allCustomers);return;}
+  renderCustomers(allCustomers.filter(c=>(c.phone&&String(c.phone).includes(q))||(c.name&&c.name.includes(q))));
+}
+
+function copyText(id,btnId){
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{
+    const btn=document.getElementById(btnId);btn.textContent='✅ コピーしました';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='📋 コピー';btn.classList.remove('copied');},2000);
+  });
+}
+
+function setStatus(id,msg,type){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.className='status'+(type?' '+type:'');}
+
+async function post(data){const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'text/plain'}});return res.json();}
+
+init();
+</script>
+</body>
 </html>
