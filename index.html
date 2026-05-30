@@ -1160,11 +1160,13 @@ function openPayModal(therapist, totalUnpaid, basicBackTotal, shimeiBackTotal, o
   if(salesBackTotal > 0) breakdownHTML += '<div class="rw-row"><span class="rw-muted">売上バック</span><span>¥' + salesBackTotal.toLocaleString() + '</span></div>';
   if(prevBalance < 0) breakdownHTML += '<div class="rw-row"><span style="color:var(--red);">前回不足</span><span style="color:var(--red);">+¥' + Math.abs(prevBalance).toLocaleString() + '</span></div>';
   if(prevBalance > 0) breakdownHTML += '<div class="rw-row"><span style="color:var(--green);">前回過払い</span><span style="color:var(--green);">-¥' + prevBalance.toLocaleString() + '</span></div>';
-  breakdownHTML += '<div class="rw-row total"><span class="rw-gold">報酬小計</span><span class="rw-gold">¥' + totalUnpaid.toLocaleString() + '</span></div>';
+  // 今回支払い = 報酬小計 + 前回残高（マイナス=不足→加算、プラス=過払い→減算）
+  const modalTotalPay = totalUnpaid - prevBalance;
+  breakdownHTML += '<div class="rw-row total"><span class="rw-gold">今回支払い</span><span class="rw-gold">¥' + modalTotalPay.toLocaleString() + '</span></div>';
   breakdownHTML += '</div>';
   document.getElementById('payModalBreakdown').innerHTML = breakdownHTML;
   document.getElementById('payModalTransport').value = 0;
-  const autoTotal = totalUnpaid - prevBalance;
+  const autoTotal = totalUnpaid - prevBalance; // 報酬 + 前回残高反映
   document.getElementById('payModalAmount').value = autoTotal;
   document.getElementById('payModalDiff').innerHTML = '<span style="color:var(--green);">✅ 過不足なし</span>';
   setStatus('payModalStatus','','');
