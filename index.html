@@ -1166,7 +1166,8 @@ function openPayModal(therapist, totalUnpaid, basicBackTotal, shimeiBackTotal, o
   breakdownHTML += '</div>';
   document.getElementById('payModalBreakdown').innerHTML = breakdownHTML;
   document.getElementById('payModalTransport').value = 0;
-  const autoTotal = totalUnpaid - prevBalance; // 報酬 + 前回残高反映
+  // 初期支払い金額 = 報酬 + 前回残高反映（交通費は後で加算）
+  const autoTotal = totalUnpaid - prevBalance;
   document.getElementById('payModalAmount').value = autoTotal;
   document.getElementById('payModalDiff').innerHTML = '<span style="color:var(--green);">✅ 過不足なし</span>';
   setStatus('payModalStatus','','');
@@ -1177,7 +1178,7 @@ function openPayModal(therapist, totalUnpaid, basicBackTotal, shimeiBackTotal, o
 function calcPayModalTotal() {
   const transport = parseInt(document.getElementById('payModalTransport').value)||0;
   if(!currentPayData) return;
-  // 支払い金額 = 報酬 + 前回残高反映 + 交通費（自動加算）
+  // 支払い金額 = 報酬 - 前回残高（前払い差引・不足加算） + 交通費
   const autoTotal = currentPayData.totalUnpaid - currentPayData.prevBalance + transport;
   document.getElementById('payModalAmount').value = autoTotal;
   calcPayModalDiff();
@@ -1187,7 +1188,8 @@ function calcPayModalDiff() {
   const payAmount = parseInt(document.getElementById('payModalAmount').value)||0;
   const transport = parseInt(document.getElementById('payModalTransport').value)||0;
   if(!currentPayData) return;
-  const totalDue = currentPayData.totalUnpaid + transport;
+  // 本来支払うべき金額 = 報酬 + 交通費（前回残高は既に反映済み）
+  const totalDue = currentPayData.totalUnpaid - currentPayData.prevBalance + transport;
   const diff = payAmount - totalDue;
   const diffEl = document.getElementById('payModalDiff');
   if(diff === 0) diffEl.innerHTML = '<span style="color:var(--green);">✅ 過不足なし</span>';
