@@ -433,8 +433,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <button class="modal-close" onclick="closePayModal()">✕</button>
     <div class="modal-title" id="payModalTitle">支払い処理</div>
     <div id="payModalBreakdown" style="margin-bottom:12px;"></div>
-    <div class="fg" style="margin-bottom:8px;"><label>交通費（円）</label><input type="number" id="payModalTransport" placeholder="0"></div>
-    <div class="fg" style="margin-bottom:8px;"><label>実際に支払う金額（円）</label><input type="number" id="payModalAmount" placeholder="0"></div>
+    <div class="fg" style="margin-bottom:8px;"><label>交通費（円）</label><input type="number" id="payModalTransport" placeholder="0" oninput="calcPayModalTotal()"></div>
+    <div class="fg" style="margin-bottom:8px;"><label>実際に支払う金額（円）</label><input type="number" id="payModalAmount" placeholder="0" oninput="calcPayModalDiff()"></div>
     <div id="payModalDiff" style="font-size:.78rem;margin-bottom:10px;"></div>
     <button class="btn btn-green" onclick="executePayFromList()">✅ 支払済みにする</button>
     <div class="status" id="payModalStatus"></div>
@@ -1177,6 +1177,7 @@ function openPayModal(therapist, totalUnpaid, basicBackTotal, shimeiBackTotal, o
 function calcPayModalTotal() {
   const transport = parseInt(document.getElementById('payModalTransport').value)||0;
   if(!currentPayData) return;
+  // 支払い金額 = 報酬 + 前回残高反映 + 交通費（自動加算）
   const autoTotal = currentPayData.totalUnpaid - currentPayData.prevBalance + transport;
   document.getElementById('payModalAmount').value = autoTotal;
   calcPayModalDiff();
