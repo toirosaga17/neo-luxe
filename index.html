@@ -651,6 +651,11 @@ function generate(){
   if(!therapist||!room||!dt){alert('セラピスト・部屋番号・日時は必須です');return;}
   const d=new Date(dt);const m=d.getMonth()+1,day=d.getDate(),h=d.getHours(),min=String(d.getMinutes()).padStart(2,'0');
   const dateStr=`${m}/${day}`,timeStr=`${h}時${min}分`,fullStr=`${m}/${day}  ${h}:${min}`;
+  // 終了時間を計算
+  const totalMin2 = h*60 + parseInt(min) + parseInt(duration);
+  const endH = Math.floor(totalMin2/60);
+  const endMin2 = String(totalMin2%60).padStart(2,'0');
+  const endTimeStr = `${endH}時${endMin2}分`;
   const t=THERAPISTS[therapist]||{sta:60,leo:55,alm:55,free:500,shimei:500,honshimei:1500};
   let br=t.sta;if(course==='レオナール')br=t.leo;if(course==='アルミラージ')br=t.alm;
   const bb=Math.floor(cp*br/100);const sb=shimei==='フリー'?t.free:shimei==='指名'?t.shimei:t.honshimei;
@@ -661,7 +666,7 @@ function generate(){
   const sms=`メンズエステ店の中からNEO LUXEをお選びいただき、\n誠に有難うございます。\n当店は【厳選されたセラピスト】のみが在籍している店舗でございます。\n自信を持ってご案内させていただきます。\nお客様にとって癒しのお時間になる事を心より願っております🌱\n【〒790-0878】\n【勝山アリストシード】\n松山市勝山町1丁目1-15\n時間:${fullStr}\nルーム:${room}\n上記のマンションに到着されましたらお手数をおかけしますが、\n以下のURLをタップしていただき、\n【電話】を押しご連絡をよろしくお願いいたします。\nhttps://estama.jp/shop/29585/`;
   let lineExtra='';
   if(ca>0)lineExtra+=`\n▫クレジット決済：¥${ca.toLocaleString()}`;
-  const line=`▫日付:${dateStr}\n▫担当セラピスト: ${therapist}${shimei==='フリー'?'':shimei}\n▫時間:${timeStr}\n▫コース:${course}${duration}\n▫オプション:${optNames||'なし'}\n▫お名前:${customer}\n▫割引内容:${discount||'なし'}${lineExtra}\n▫お客様支払い合計:¥${total.toLocaleString()}`;
+  const line=`▫日付:${dateStr}\n▫担当セラピスト: ${therapist}${shimei==='フリー'?'':shimei}\n▫時間:${timeStr}〜${endTimeStr}\n▫コース:${course}${duration}\n▫オプション:${optNames||'なし'}\n▫お名前:${customer}\n▫割引内容:${discount||'なし'}${lineExtra}\n▫お客様支払い合計:¥${total.toLocaleString()}`;
   document.getElementById('smsText').textContent=sms;document.getElementById('lineText').textContent=line;
   const adv=parseInt(document.getElementById('advance').value)||0;
   lastData={action:'record',date:dateStr,time:timeStr,therapist,course,coursePrice:cp,shimeiType:shimei,shimeiPrice:sp,options:selectedOpts,discount,discountAmount:da,total,customer,phone,duration,cardAmount:ca,advance:adv};
