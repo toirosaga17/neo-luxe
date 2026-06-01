@@ -400,7 +400,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <input type="hidden" id="editRow">
     <input type="hidden" id="editTherapist">
     <div class="form-grid">
-      <div class="fg full"><label>予約日付（変更する場合）</label><input type="text" id="editDate" placeholder="例：5/21"></div>
+      <div class="fg"><label>予約日付</label><input type="text" id="editDate" placeholder="例：5/21"></div>
+      <div class="fg"><label>時間</label><input type="text" id="editTime" placeholder="例：14時00分"></div>
+      <div class="fg full"><label>お客様氏名</label><input type="text" id="editCustomer" placeholder="例：カジ様"></div>
       <div class="fg"><label>コース</label><select id="editCourse" onchange="onEditCourseChange()"><option value="スタンダード">スタンダード</option><option value="レオナール">レオナール</option><option value="アルミラージ">アルミラージ</option></select></div>
       <div class="fg"><label>時間</label><select id="editDuration"><option value="60">60分</option></select></div>
       <div class="fg"><label>指名種別</label><select id="editShimei" onchange="onEditShimeiChange()"><option value="フリー">フリー</option><option value="指名">指名</option><option value="本指名">本指名</option></select></div>
@@ -712,7 +714,7 @@ function selectCalDay(dateStr,d){
   const header=document.getElementById('calDetailHeader');const list=document.getElementById('calDetailList');
   header.style.display='block';header.textContent=`${calMonth+1}/${d}（${DOW[new Date(calYear,calMonth,d).getDay()]}）の予約`;
   const dayBookings=calBookings.filter(b=>b.date===dateStr);
-  list.innerHTML=dayBookings.length?dayBookings.map(b=>`<div class="booking-item${b.status==='締め済み'?' done':''}"><div class="booking-time">${b.startTime} 〜 ${b.endTime}</div><div class="booking-therapist">${b.therapist}${b.room?` <span style="font-size:.72rem;color:var(--text3);">🚪${b.room}</span>`:''}</div><div class="booking-detail">${b.course} ／ ${b.customer||'名前未登録'} ／ ¥${(b.total||0).toLocaleString()}</div><div class="booking-actions"><button class="booking-btn edit" onclick="openEditModal(${b.row},'${b.therapist}','${b.course}','${b.startTime}','${b.date}','${b.shimeiType||''}','${b.options||''}',${b.discountAmount||0},${b.cardAmount||0})">✏️ 変更</button><button class="booking-btn cancel" onclick="cancelFromCal(${b.row},'${b.therapist}','${b.startTime}')">🗑️ キャンセル</button></div></div>`).join(''): '<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">予約がありません</div>';
+  list.innerHTML=dayBookings.length?dayBookings.map(b=>`<div class="booking-item${b.status==='締め済み'?' done':''}"><div class="booking-time">${b.startTime} 〜 ${b.endTime}</div><div class="booking-therapist">${b.therapist}${b.room?` <span style="font-size:.72rem;color:var(--text3);">🚪${b.room}</span>`:''}</div><div class="booking-detail">${b.course} ／ ${b.customer||'名前未登録'} ／ ¥${(b.total||0).toLocaleString()}</div><div class="booking-actions"><button class="booking-btn edit" onclick="openEditModal(${b.row},'${b.therapist}','${b.course}','${b.startTime}','${b.date}','${b.shimeiType||''}','${b.options||''}',${b.discountAmount||0},${b.cardAmount||0},'${b.customer||''}')">✏️ 変更</button><button class="booking-btn cancel" onclick="cancelFromCal(${b.row},'${b.therapist}','${b.startTime}')">🗑️ キャンセル</button></div></div>`).join(''): '<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">予約がありません</div>';
 }
 
 function changeCalMonth(diff){calMonth+=diff;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendar();document.getElementById('calDetailHeader').style.display='none';document.getElementById('calDetailList').innerHTML='';}
@@ -776,10 +778,13 @@ async function cancelFromCal(row,therapist,time){
   catch(e){alert('エラー: '+e.message);}
 }
 
-function openEditModal(row,therapist,courseStr,time,currentDate,shimei,optNames,discount,card){
+function openEditModal(row,therapist,courseStr,time,currentDate,shimei,optNames,discount,card,customer){
   document.getElementById('editRow').value=row;
   document.getElementById('editTherapist').value=therapist;
   document.getElementById('editDate').value=currentDate||'';
+  document.getElementById('editTime').value=time||'';
+  document.getElementById('editCustomer').value=customer||'';
+
 
   // コース・時間
   const courseMatch=courseStr.match(/^(スタンダード|レオナール|アルミラージ)/);
@@ -856,6 +861,8 @@ function calcEditTotal(){
 async function saveEditBooking(){
   const row=parseInt(document.getElementById('editRow').value);
   const newDate=document.getElementById('editDate').value.trim();
+  const newTime=document.getElementById('editTime').value.trim();
+  const newCustomer=document.getElementById('editCustomer').value.trim();
   const course=document.getElementById('editCourse').value;const duration=document.getElementById('editDuration').value;
   const shimei=document.getElementById('editShimei').value;const shimeiPrice=parseInt(document.getElementById('editShimeiPrice').value)||0;
   const coursePrice=parseInt(document.getElementById('editCoursePrice').value)||0;
@@ -864,7 +871,7 @@ async function saveEditBooking(){
   const total=calcEditTotal();
   setStatus('editStatus','保存中...','');
   try{
-    const res=await post({action:'updateBooking',row,newDate,course,duration,shimeiType:shimei,shimeiPrice,coursePrice,discountAmount:discountAmt,cardAmount,options:editSelectedOpts,total});
+    const res=await post({action:'updateBooking',row,newDate,newTime,newCustomer,course,duration,shimeiType:shimei,shimeiPrice,coursePrice,discountAmount:discountAmt,cardAmount,options:editSelectedOpts,total});
     if(res.success){setStatus('editStatus','保存完了！','ok');setTimeout(()=>{closeEditModal();renderCalendar();},800);}
     else throw new Error(res.error);
   }catch(e){setStatus('editStatus','エラー: '+e.message,'err');}
