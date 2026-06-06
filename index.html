@@ -183,7 +183,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <div class="dash-card"><div class="dash-num" id="d-sales">—</div><div class="dash-label">本日売上</div></div>
       <div class="dash-card"><div class="dash-num" id="d-count">—</div><div class="dash-label">本日予約数</div></div>
       <div class="dash-card"><div class="dash-num" id="d-reward" style="font-size:1.2rem;">—</div><div class="dash-label">本日報酬合計</div></div>
-      <div class="dash-card"><div class="dash-num" id="d-unpaid" style="color:var(--red);">—</div><div class="dash-label">未払い件数</div></div>
+      <div class="dash-card"><div class="dash-num" id="d-unpaid" style="color:var(--gold);">—</div><div class="dash-label">本日粗利</div></div>
     </div>
     <div class="card">
       <div class="card-label">セラピスト別売上</div>
@@ -277,7 +277,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <button class="cal-nav-btn" onclick="changeCalMonth(1)">▶</button>
     </div>
     <div class="cal-grid" id="calGrid">
-      <div class="cal-day-header sun">日</div><div class="cal-day-header">月</div><div class="cal-day-header">火</div><div class="cal-day-header">水</div><div class="cal-day-header">木</div><div class="cal-day-header sat">土</div><div class="cal-day-header">日</div>
+      <div class="cal-day-header sun">日</div><div class="cal-day-header">月</div><div class="cal-day-header">火</div><div class="cal-day-header">水</div><div class="cal-day-header">木</div><div class="cal-day-header">金</div><div class="cal-day-header sat">土</div>
     </div>
     <div style="margin-top:10px;">
       <div class="cal-detail-header" id="calDetailHeader" style="display:none;"></div>
@@ -518,7 +518,8 @@ async function loadDashboard(){
       document.getElementById('d-sales').textContent='¥'+(res.todaySales||0).toLocaleString();
       document.getElementById('d-count').textContent=res.todayCount||0;
       document.getElementById('d-reward').textContent='¥'+(res.todayReward||0).toLocaleString();
-      document.getElementById('d-unpaid').textContent=res.unpaidCount||0;
+      const profit = (res.todaySales||0) - (res.todayReward||0);
+      document.getElementById('d-unpaid').textContent='¥'+profit.toLocaleString();
       const maxSales=res.therapistList.length?res.therapistList[0].sales:1;
       document.getElementById('d-therapists').innerHTML=res.therapistList.length?res.therapistList.map(t=>`<div class="rank-row"><span style="font-size:.8rem;">${t.name}</span><div class="rank-bar-wrap"><div class="rank-bar" style="width:${Math.round(t.sales/maxSales*100)}%"></div></div><span class="rank-sales">¥${t.sales.toLocaleString()}</span></div>`).join(''): '<div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">予約がありません</div>';
     }
