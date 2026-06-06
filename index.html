@@ -189,7 +189,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
       <div class="card-label">セラピスト別売上</div>
       <div id="d-therapists"><div style="color:var(--text3);font-size:.78rem;text-align:center;padding:8px;">読み込み中...</div></div>
     </div>
-    <button onclick="loadDashboard()" style="background:linear-gradient(135deg,var(--gold),var(--gold3));border:none;border-radius:8px;color:var(--bg);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.82rem;font-weight:700;padding:12px;width:100%;touch-action:manipulation;margin-bottom:10px;">🔄 更新</button>
+    <button onclick="loadDashboard()" style="background:linear-gradient(135deg,var(--gold),var(--gold3));border:none;border-radius:8px;color:var(--bg);cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.82rem;font-weight:700;padding:12px;width:100%;touch-action:manipulation;margin-bottom:6px;">🔄 更新</button>
+    <button onclick="rebuildSales()" style="background:linear-gradient(135deg,var(--blue),#2d6a9f);border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:.82rem;font-weight:700;padding:12px;width:100%;touch-action:manipulation;margin-bottom:10px;">📊 売上集計を再計算</button>
+    <div class="status" id="rebuildStatus"></div>
   </div>
 </div>
 
@@ -1154,6 +1156,16 @@ function copyText(id,btnId){
     const btn=document.getElementById(btnId);btn.textContent='✅ コピーしました';btn.classList.add('copied');
     setTimeout(()=>{btn.textContent='📋 コピー';btn.classList.remove('copied');},2000);
   });
+}
+
+async function rebuildSales(){
+  setStatus('rebuildStatus','集計中...','');
+  try{
+    const res=await post({action:'rebuildSales'});
+    if(res.success){
+      setStatus('rebuildStatus',`完了！日別${res.daily}件・セラピスト別${res.therapist}件・月別${res.monthly}件`,'ok');
+    }else throw new Error(res.error);
+  }catch(e){setStatus('rebuildStatus','エラー: '+e.message,'err');}
 }
 
 function setStatus(id,msg,type){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.className='status'+(type?' '+type:'');}
