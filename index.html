@@ -425,6 +425,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
         <div class="opt-btn" id="eo-ヘッドスパ" onclick="toggleEditOpt(this,'ヘッドスパ',1000,1000)">ヘッドスパ<br><span class="opt-price">¥1,000</span></div>
       </div>
     </div>
+    <div id="editExtensionList" style="margin-top:6px;"></div>
     <div class="total-bar" style="margin-top:10px;"><span class="total-label">合計</span><span class="total-val" id="editTotalPrice">¥0</span></div>
     <button class="btn btn-green" onclick="saveEditBooking()">💾 変更を保存</button>
     <div class="status" id="editStatus"></div>
@@ -579,6 +580,12 @@ function toggleOpt(el,name,price,back){
   calcTotal();
 }
 
+function addCountable(name,price,back){
+  selectedOpts.push({name,price,back});
+  renderExtensionList();
+  calcTotal();
+}
+
 function addExtension(name,price,back){
   selectedOpts.push({name,price,back});
   renderExtensionList();
@@ -592,12 +599,12 @@ function removeExtension(idx){
 }
 
 function renderExtensionList(){
-  const extOpts=selectedOpts.filter(o=>o.name.includes('延長'));
+  const addedOpts=selectedOpts.filter(o=>o.name.includes('延長')||o.name.includes('集中'));
   const list=document.getElementById('extensionList');
   if(!list)return;
-  if(extOpts.length===0){list.innerHTML='';return;}
-  list.innerHTML='<div style="font-size:.65rem;color:var(--text3);margin-bottom:4px;">追加された延長</div>'+
-    selectedOpts.map((o,i)=>o.name.includes('延長')?`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg4);border-radius:6px;padding:5px 8px;margin-bottom:3px;font-size:.72rem;"><span style="color:var(--gold);">${o.name} ¥${o.price.toLocaleString()}</span><button onclick="removeExtension(${i})" style="background:var(--red);border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:.62rem;padding:2px 6px;">削除</button></div>`:'').join('');
+  if(addedOpts.length===0){list.innerHTML='';return;}
+  list.innerHTML='<div style="font-size:.65rem;color:var(--text3);margin-bottom:4px;">追加されたオプション</div>'+
+    selectedOpts.map((o,i)=>(o.name.includes('延長')||o.name.includes('集中'))?`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg4);border-radius:6px;padding:5px 8px;margin-bottom:3px;font-size:.72rem;"><span style="color:var(--gold);">${o.name} ¥${o.price.toLocaleString()}</span><button onclick="removeExtension(${i})" style="background:var(--red);border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:.62rem;padding:2px 6px;">削除</button></div>`:'').join('');
 }
 
 function calcTotal(){
@@ -672,7 +679,13 @@ function generate(){
   const line=`▫日付:${dateStr}\n▫担当セラピスト: ${therapist}${shimei==='フリー'?'':shimei}\n▫時間:${timeStr}〜${endTimeStr}\n▫コース:${course}${duration}\n▫オプション:${optNames||'なし'}\n▫お名前:${customer}\n▫割引内容:${discount||'なし'}${lineExtra}\n▫お客様支払い合計:¥${total.toLocaleString()}`;
   document.getElementById('smsText').textContent=sms;document.getElementById('lineText').textContent=line;
   const adv=parseInt(document.getElementById('advance').value)||0;
-  lastData={action:'record',date:dateStr,time:timeStr,therapist,course,coursePrice:cp,shimeiType:shimei,shimeiPrice:sp,options:selectedOpts,discount,discountAmount:da,total,customer,phone,duration,cardAmount:ca,advance:adv};
+  // 延長オプションの合計時間を計算
+  const extMinutes = selectedOpts.filter(o=>o.name.includes('延長')).reduce((s,o)=>{
+    const m = o.name.match(/(\d+)分/);
+    return s + (m ? parseInt(m[1]) : 0);
+  }, 0);
+  const totalDuration = parseInt(duration) + extMinutes;
+  lastData={action:'record',date:dateStr,time:timeStr,therapist,course,coursePrice:cp,shimeiType:shimei,shimeiPrice:sp,options:selectedOpts,discount,discountAmount:da,total,customer,phone,duration:String(totalDuration),cardAmount:ca,advance:adv};
   ['rewardCard','recordCard','smsCard','lineCard'].forEach(id=>document.getElementById(id).style.display='block');
   document.getElementById('rewardCard').scrollIntoView({behavior:'smooth'});
 }
@@ -871,6 +884,8 @@ async function saveEditBooking(){
   const newDate=document.getElementById('editDate').value.trim();
   const newTime=document.getElementById('editTime').value.trim();
   const newCustomer=document.getElementById('editCustomer').value.trim();
+  // 延長時間を加算
+  const editExtMin=editSelectedOpts.filter(o=>o.name.includes('延長')).reduce((s,o)=>{const m=o.name.match(/(\d+)分/);return s+(m?parseInt(m[1]):0);},0);
   const course=document.getElementById('editCourse').value;const duration=document.getElementById('editDuration').value;
   const shimei=document.getElementById('editShimei').value;const shimeiPrice=parseInt(document.getElementById('editShimeiPrice').value)||0;
   const coursePrice=parseInt(document.getElementById('editCoursePrice').value)||0;
@@ -879,7 +894,8 @@ async function saveEditBooking(){
   const total=calcEditTotal();
   setStatus('editStatus','保存中...','');
   try{
-    const res=await post({action:'updateBooking',row,newDate,newTime,newCustomer,course,duration,shimeiType:shimei,shimeiPrice,coursePrice,discountAmount:discountAmt,cardAmount,options:editSelectedOpts,total});
+    const totalEditDuration=String(parseInt(duration)+editExtMin);
+    const res=await post({action:'updateBooking',row,newDate,newTime,newCustomer,course,duration:totalEditDuration,shimeiType:shimei,shimeiPrice,coursePrice,discountAmount:discountAmt,cardAmount,options:editSelectedOpts,total});
     if(res.success){setStatus('editStatus','保存完了！','ok');setTimeout(()=>{closeEditModal();renderCalendar();},800);}
     else throw new Error(res.error);
   }catch(e){setStatus('editStatus','エラー: '+e.message,'err');}
