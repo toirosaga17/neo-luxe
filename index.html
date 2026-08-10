@@ -665,8 +665,14 @@ function generate(){
   if(!therapist||!room||!dt){alert('セラピスト・部屋番号・日時は必須です');return;}
   const d=new Date(dt);const m=d.getMonth()+1,day=d.getDate(),h=d.getHours(),min=String(d.getMinutes()).padStart(2,'0');
   const dateStr=`${m}/${day}`,timeStr=`${h}時${min}分`,fullStr=`${m}/${day}  ${h}:${min}`;
-  // 終了時間を計算
-  const totalMin2 = h*60 + parseInt(min) + parseInt(duration);
+  // 延長オプションの合計時間を先に計算
+  const extMinutes = selectedOpts.filter(o=>o.name.includes('延長')).reduce((s,o)=>{
+    const mm = o.name.match(/(\d+)分/);
+    return s + (mm ? parseInt(mm[1]) : 0);
+  }, 0);
+  const totalDuration = parseInt(duration) + extMinutes;
+  // 終了時間を延長込みで計算
+  const totalMin2 = h*60 + parseInt(min) + totalDuration;
   const endH = Math.floor(totalMin2/60);
   const endMin2 = String(totalMin2%60).padStart(2,'0');
   const endTimeStr = `${endH}時${endMin2}分`;
@@ -683,12 +689,6 @@ function generate(){
   const line=`▫日付:${dateStr}\n▫担当セラピスト: ${therapist}${shimei==='フリー'?'':shimei}\n▫時間:${timeStr}〜${endTimeStr}\n▫コース:${course}${duration}\n▫オプション:${optNames||'なし'}\n▫お名前:${customer}\n▫割引内容:${discount||'なし'}${lineExtra}\n▫お客様支払い合計:¥${total.toLocaleString()}`;
   document.getElementById('smsText').textContent=sms;document.getElementById('lineText').textContent=line;
   const adv=parseInt(document.getElementById('advance').value)||0;
-  // 延長オプションの合計時間を計算
-  const extMinutes = selectedOpts.filter(o=>o.name.includes('延長')).reduce((s,o)=>{
-    const m = o.name.match(/(\d+)分/);
-    return s + (m ? parseInt(m[1]) : 0);
-  }, 0);
-  const totalDuration = parseInt(duration) + extMinutes;
   lastData={action:'record',date:dateStr,time:timeStr,therapist,course,coursePrice:cp,shimeiType:shimei,shimeiPrice:sp,options:selectedOpts,discount,discountAmount:da,total,customer,phone,duration:String(totalDuration),cardAmount:ca,advance:adv};
   ['rewardCard','recordCard','smsCard','lineCard'].forEach(id=>document.getElementById(id).style.display='block');
   document.getElementById('rewardCard').scrollIntoView({behavior:'smooth'});
