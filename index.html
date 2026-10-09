@@ -202,7 +202,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
     <div class="form-grid">
       <div class="fg"><label>セラピスト</label><select id="therapist" onchange="onTherapistChange()"><option value="">選択</option></select></div>
       <div class="fg"><label>指名種別</label><select id="shimei" onchange="onShimeiChange()"><option value="フリー">フリー</option><option value="指名">指名</option><option value="本指名">本指名</option></select></div>
-      <div class="fg full"><label>予約日時</label><input type="datetime-local" id="datetime"></div>
+      <div class="fg full"><label>予約日時</label><input type="datetime-local" id="datetime" onchange="onDatetimeChange()"></div>
       <div class="fg"><label>コース</label><select id="course" onchange="onCourseChange()"><option value="スタンダード">スタンダード</option><option value="レオナール">レオナール</option><option value="アルミラージ">アルミラージ</option></select></div>
       <div class="fg"><label>コース時間</label><select id="duration" onchange="autoPrice()"><option value="60">60分</option></select></div>
       <div class="fg full"><label>部屋番号</label><input type="text" id="room" placeholder="例：503"></div>
@@ -542,10 +542,27 @@ async function onTherapistChange(){
     if(dtVal){
       const p=dtVal.split('T')[0].split('-');
       const dateStr=`${parseInt(p[1])}/${parseInt(p[2])}`;
-      try{const res=await post({action:'getSchedule',dates:[dateStr]});if(res.success){const f=res.schedule.find(s=>s.therapist===therapist);if(f&&f.room)document.getElementById('room').value=f.room;}}catch(e){}
+      try{const res=await post({action:'getSchedule',dates:[dateStr]});if(res.success){const f=res.schedule.find(s=>s.therapist===therapist);if(f&&f.room)document.getElementById('room').value=f.room;else document.getElementById('room').value='';}}catch(e){}
     }
   }
   calcTotal();
+}
+
+async function onDatetimeChange(){
+  const therapist=document.getElementById('therapist').value;
+  const dtVal=document.getElementById('datetime').value;
+  if(therapist&&dtVal){
+    const p=dtVal.split('T')[0].split('-');
+    const dateStr=`${parseInt(p[1])}/${parseInt(p[2])}`;
+    try{
+      const res=await post({action:'getSchedule',dates:[dateStr]});
+      if(res.success){
+        const f=res.schedule.find(s=>s.therapist===therapist);
+        if(f&&f.room)document.getElementById('room').value=f.room;
+        else document.getElementById('room').value='';
+      }
+    }catch(e){}
+  }
 }
 
 function updateShimeiPrice(therapist,shimei){
@@ -662,7 +679,11 @@ function generate(){
   const cp=parseInt(document.getElementById('coursePrice').value)||0;const sp=parseInt(document.getElementById('shimeiPrice').value)||0;
   const discount=document.getElementById('discount').value;const da=parseInt(document.getElementById('discountAmt').value)||0;
   const ca=parseInt(document.getElementById('cardAmount').value)||0;const total=calcTotal();
-  if(!therapist||!room||!dt){alert('セラピスト・部屋番号・日時は必須です');return;}
+  if(!therapist||!dt){alert('セラピストと日時は必須です');return;}
+  if(!room){
+    const ok=confirm('部屋番号が未設定です。出勤表に部屋番号を登録してください。\nこのまま続けますか？');
+    if(!ok)return;
+  }
   const d=new Date(dt);const m=d.getMonth()+1,day=d.getDate(),h=d.getHours(),min=String(d.getMinutes()).padStart(2,'0');
   const dateStr=`${m}/${day}`,timeStr=`${h}時${min}分`,fullStr=`${m}/${day}  ${h}:${min}`;
   // 延長オプションの合計時間を先に計算
